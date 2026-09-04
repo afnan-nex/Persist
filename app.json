@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Persist",
+    "slug": "persist",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.persist.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1E1E2E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-local-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6366F1"
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
