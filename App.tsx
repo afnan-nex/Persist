@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { BiometricLockScreen } from './src/components/common/BiometricLockScreen';
-import { initNotifications } from './src/services/notifications';
+import { initNotifications, registerNotificationResponseListener } from './src/services/notifications';
 
 function MainContent() {
   const { colors, appSettings, isReady } = useTheme();
@@ -14,6 +14,10 @@ function MainContent() {
 
   useEffect(() => {
     initNotifications();
+    const sub = registerNotificationResponseListener();
+    return () => {
+      sub.remove();
+    };
   }, []);
 
   if (!isReady) {
