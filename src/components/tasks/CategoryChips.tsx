@@ -1,14 +1,9 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Category } from '../../types';
 import { useTheme } from '../../theme/ThemeContext';
+import { FilterChip } from '../m3/Chip';
 
 interface CategoryChipsProps {
   categories: Category[];
@@ -23,7 +18,7 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({
   onSelectCategory,
   onManageCategories,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, shapes } = useTheme();
 
   return (
     <View style={styles.wrapper}>
@@ -33,76 +28,43 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({
         contentContainerStyle={styles.container}
       >
         {/* "All" Category Chip */}
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            {
-              backgroundColor:
-                selectedCategoryId === null ? colors.primary : colors.surfaceVariant,
-            },
-          ]}
+        <FilterChip
+          label="All"
+          selected={selectedCategoryId === null}
           onPress={() => onSelectCategory(null)}
-          activeOpacity={0.8}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              {
-                color:
-                  selectedCategoryId === null ? colors.onPrimary : colors.onSurfaceVariant,
-                fontWeight: selectedCategoryId === null ? '700' : '500',
-                fontFamily,
-              },
-            ]}
-          >
-            All
-          </Text>
-        </TouchableOpacity>
+          showCheckmark={false}
+        />
 
         {/* Individual Category Chips */}
         {categories.map((cat) => {
           const isSelected = selectedCategoryId === cat.id;
           return (
-            <TouchableOpacity
+            <FilterChip
               key={cat.id}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: isSelected ? colors.primary : colors.surfaceVariant,
-                },
-              ]}
+              label={cat.name}
+              selected={isSelected}
               onPress={() => onSelectCategory(cat.id)}
-              activeOpacity={0.8}
-            >
-              <View
-                style={[
-                  styles.colorDot,
-                  { backgroundColor: cat.color || colors.primary },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.chipText,
-                  {
-                    color: isSelected ? colors.onPrimary : colors.onSurfaceVariant,
-                    fontWeight: isSelected ? '700' : '500',
-                    fontFamily,
-                  },
-                ]}
-              >
-                {cat.name}
-              </Text>
-            </TouchableOpacity>
+              customColor={cat.color}
+              showCheckmark={true}
+            />
           );
         })}
 
         {/* Manage Categories Button */}
         <TouchableOpacity
-          style={[styles.manageButton, { backgroundColor: colors.surfaceVariant }]}
+          style={[
+            styles.manageButton,
+            {
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.small,
+            },
+          ]}
           onPress={onManageCategories}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Manage categories"
         >
-          <MaterialCommunityIcons name="cog-outline" size={18} color={colors.onSurface} />
+          <MaterialCommunityIcons name="tune-variant" size={18} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -119,28 +81,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  colorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  chipText: {
-    fontSize: 14,
-  },
   manageButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4,
   },
 });

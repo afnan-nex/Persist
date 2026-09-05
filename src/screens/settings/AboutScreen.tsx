@@ -4,22 +4,24 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar } from '../../components/m3';
 
 export const AboutScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
 
   const [showChangelog, setShowChangelog] = useState(false);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title="About Persist"
-        leftAction={{
+        variant="small"
+        navigationIcon={{
           icon: 'arrow-left',
           onPress: () => navigation.goBack(),
+          accessibilityLabel: 'Go back',
         }}
       />
 
@@ -33,21 +35,22 @@ export const AboutScreen: React.FC = () => {
           style={[
             styles.heroCard,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
-          <View style={[styles.appIconContainer, { backgroundColor: colors.primary }]}>
-            <MaterialCommunityIcons name="checkbox-marked-circle" size={44} color={colors.onPrimary} />
+          <View style={[styles.appIconContainer, { backgroundColor: colors.primaryContainer, borderRadius: shapes.large }]}>
+            <MaterialCommunityIcons name="checkbox-marked-circle" size={44} color={colors.onPrimaryContainer} />
           </View>
-          <Text style={[styles.appName, { color: colors.onSurface, fontFamily }]}>
+          <Text style={[styles.appName, { color: colors.onSurface, ...typography.headlineMedium, fontFamily }]}>
             Persist
           </Text>
-          <Text style={[styles.appVersion, { color: colors.primary, fontFamily }]}>
+          <Text style={[styles.appVersion, { color: colors.primary, ...typography.labelLarge, fontFamily }]}>
             Version 1.0.0
           </Text>
-          <Text style={[styles.appDescription, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.appDescription, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
             A modern, privacy-respecting habit and task management companion engineered with Material 3 design and offline-first persistence.
           </Text>
         </View>
@@ -57,36 +60,37 @@ export const AboutScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
               alignItems: 'center',
             },
           ]}
         >
-          <Text style={{ fontSize: 17, fontWeight: '800', color: colors.onSurface, fontFamily, marginBottom: 4 }}>
+          <Text style={{ ...typography.titleMedium, fontWeight: '700', color: colors.onSurface, fontFamily, marginBottom: 4 }}>
             Developed by AFNAN with ❤️
           </Text>
-          <Text style={{ fontSize: 13, color: colors.onSurfaceVariant, fontFamily, marginBottom: 14 }}>
+          <Text style={{ ...typography.bodyMedium, color: colors.onSurfaceVariant, fontFamily, marginBottom: 14 }}>
             Creator &amp; Maintainer
           </Text>
           <TouchableOpacity
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: colors.surfaceVariant,
+              backgroundColor: colors.secondaryContainer,
               paddingVertical: 10,
               paddingHorizontal: 18,
-              borderRadius: 14,
+              borderRadius: shapes.full,
               gap: 8,
             }}
             onPress={() => require('react-native').Linking.openURL('https://github.com/afnan-nex').catch(() => {})}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="github" size={20} color={colors.primary} />
-            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.onSurface, fontFamily }}>
+            <MaterialCommunityIcons name="github" size={20} color={colors.onSecondaryContainer} />
+            <Text style={{ ...typography.labelLarge, color: colors.onSecondaryContainer, fontFamily }}>
               github.com/afnan-nex
             </Text>
-            <MaterialCommunityIcons name="open-in-new" size={16} color={colors.onSurfaceVariant} />
+            <MaterialCommunityIcons name="open-in-new" size={16} color={colors.onSecondaryContainer} />
           </TouchableOpacity>
         </View>
 
@@ -95,22 +99,23 @@ export const AboutScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
-          <Text style={[styles.cardTitle, { color: colors.onSurface, fontFamily }]}>
+          <Text style={[styles.cardTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
             Key Principles
           </Text>
 
           <View style={styles.featureItem}>
             <MaterialCommunityIcons name="shield-check-outline" size={22} color={colors.primary} />
             <View style={styles.featureTextCol}>
-              <Text style={[styles.featureTitle, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.featureTitle, { color: colors.onSurface, ...typography.titleSmall, fontFamily }]}>
                 100% Offline & Private
               </Text>
-              <Text style={[styles.featureDesc, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.featureDesc, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
                 Your data stays exclusively on your device in an encrypted local SQLite database. No tracking, no cloud sync required.
               </Text>
             </View>
@@ -119,10 +124,10 @@ export const AboutScreen: React.FC = () => {
           <View style={styles.featureItem}>
             <MaterialCommunityIcons name="alarm" size={22} color={colors.primary} />
             <View style={styles.featureTextCol}>
-              <Text style={[styles.featureTitle, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.featureTitle, { color: colors.onSurface, ...typography.titleSmall, fontFamily }]}>
                 Exact Device Reminders
               </Text>
-              <Text style={[styles.featureDesc, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.featureDesc, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
                 Scheduled local alarms keep you on track without relying on push notification servers.
               </Text>
             </View>
@@ -131,10 +136,10 @@ export const AboutScreen: React.FC = () => {
           <View style={styles.featureItem}>
             <MaterialCommunityIcons name="chart-bell-curve" size={22} color={colors.primary} />
             <View style={styles.featureTextCol}>
-              <Text style={[styles.featureTitle, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.featureTitle, { color: colors.onSurface, ...typography.titleSmall, fontFamily }]}>
                 Comprehensive Analytics
               </Text>
-              <Text style={[styles.featureDesc, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.featureDesc, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
                 Track 12-month heatmaps, consistency percentages, current and best streaks, and weekly distributions.
               </Text>
             </View>
@@ -146,8 +151,9 @@ export const AboutScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
@@ -157,7 +163,7 @@ export const AboutScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <MaterialCommunityIcons name="history" size={22} color={colors.onSurface} />
-            <Text style={[styles.actionRowText, { color: colors.onSurface, fontFamily }]}>
+            <Text style={[styles.actionRowText, { color: colors.onSurface, ...typography.bodyLarge, fontFamily }]}>
               View Changelog
             </Text>
             <MaterialCommunityIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
@@ -165,27 +171,29 @@ export const AboutScreen: React.FC = () => {
         </View>
 
         {/* License Note */}
-        <Text style={[styles.licenseText, { color: colors.onSurfaceVariant, fontFamily }]}>
+        <Text style={[styles.licenseText, { color: colors.onSurfaceVariant, ...typography.bodySmall, fontFamily }]}>
           Persist is free and open-source software licensed under the GNU General Public License v3.0.
         </Text>
       </ScrollView>
 
       {/* Changelog Modal */}
       <Modal visible={showChangelog} animationType="slide" transparent onRequestClose={() => setShowChangelog(false)}>
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.scrim + '70' }]}>
           <View
             style={[
               styles.changelogSheet,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.outlineVariant,
+                backgroundColor: colors.surfaceContainerHigh,
+                borderTopLeftRadius: shapes.extraLarge,
+                borderTopRightRadius: shapes.extraLarge,
+                elevation: elevation.level3,
               },
             ]}
           >
             <View style={[styles.dragHandle, { backgroundColor: colors.outlineVariant }]} />
             <View style={styles.changelogHeader}>
-              <Text style={[styles.changelogTitle, { color: colors.onSurface, fontFamily }]}>
-                What's New in 1.0.0
+              <Text style={[styles.changelogTitle, { color: colors.onSurface, ...typography.headlineSmall, fontFamily }]}>
+                What's New in 1.0.1
               </Text>
               <TouchableOpacity onPress={() => setShowChangelog(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={colors.onSurface} />
@@ -193,27 +201,21 @@ export const AboutScreen: React.FC = () => {
             </View>
 
             <ScrollView style={styles.changelogScroll} showsVerticalScrollIndicator={false}>
-              <Text style={[styles.versionBadge, { color: colors.primary, fontFamily }]}>
-                Version 1.0.0 — Initial Release
+              <Text style={[styles.versionBadge, { color: colors.primary, ...typography.titleSmall, fontFamily }]}>
+                Version 1.0.1 — UX Refinements
               </Text>
               <View style={styles.bulletList}>
-                <Text style={[styles.bulletItem, { color: colors.onSurface, fontFamily }]}>
-                  • Clean Material 3 Expressive UI with dynamic seed color generation
+                <Text style={[styles.bulletItem, { color: colors.onSurface, ...typography.bodyMedium, fontFamily }]}>
+                  • Refined Material 3 surface elevation with clean borderless card styling
                 </Text>
-                <Text style={[styles.bulletItem, { color: colors.onSurface, fontFamily }]}>
-                  • Task manager with category filtering, reordering, and exact reminders
+                <Text style={[styles.bulletItem, { color: colors.onSurface, ...typography.bodyMedium, fontFamily }]}>
+                  • Redesigned analog clock dial with accurate touch handling and default to current phone time
                 </Text>
-                <Text style={[styles.bulletItem, { color: colors.onSurface, fontFamily }]}>
-                  • Habit tracker with embedded 7-day connected streak capsules
+                <Text style={[styles.bulletItem, { color: colors.onSurface, ...typography.bodyMedium, fontFamily }]}>
+                  • Keyboard-aware modals with persistent action buttons pinned above the virtual keyboard
                 </Text>
-                <Text style={[styles.bulletItem, { color: colors.onSurface, fontFamily }]}>
-                  • 12-month GitHub-style contribution heatmaps with daily drill-down
-                </Text>
-                <Text style={[styles.bulletItem, { color: colors.onSurface, fontFamily }]}>
-                  • Biometric authentication lock (fingerprint / PIN)
-                </Text>
-                <Text style={[styles.bulletItem, { color: colors.onSurface, fontFamily }]}>
-                  • JSON backup export & restore compatible with Grit schema v5
+                <Text style={[styles.bulletItem, { color: colors.onSurface, ...typography.bodyMedium, fontFamily }]}>
+                  • Instant autofocus and one-tap keyboard activation when opening task/habit modals
                 </Text>
               </View>
             </ScrollView>
@@ -239,9 +241,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     borderRadius: 24,
-    borderWidth: 1,
     marginBottom: 16,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   appIconContainer: {
     width: 80,
@@ -271,9 +276,12 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   cardTitle: {
     fontSize: 18,
@@ -327,7 +335,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 36,
     maxHeight: '70%',
-    borderWidth: 1,
+    elevation: 16,
   },
   dragHandle: {
     width: 40,

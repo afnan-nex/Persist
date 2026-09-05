@@ -20,7 +20,7 @@ import {
 } from '../../data/habitRepository';
 import { countCurrentStreak } from '../../data/calculations';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar, FloatingActionButton } from '../../components/m3';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { HabitCard } from '../../components/habits/HabitCard';
@@ -75,11 +75,16 @@ export const HabitsScreen: React.FC = () => {
     time: number;
     reminder: boolean;
   }) => {
-    await upsertHabit({
-      ...habitData,
-      index: habitData.id ? habits.find((h) => h.id === habitData.id)?.index ?? 0 : habits.length,
-    });
-    await loadData();
+    try {
+      await upsertHabit({
+        ...habitData,
+        index: habitData.id ? habits.find((h) => h.id === habitData.id)?.index ?? 0 : habits.length,
+      });
+    } catch (error) {
+      console.error('Failed to save habit:', error);
+    } finally {
+      await loadData();
+    }
   };
 
   const handleDeleteHabit = async () => {
@@ -106,18 +111,20 @@ export const HabitsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title="Habits"
         subtitle={`${habits.length} habits tracked`}
-        rightActions={[
+        actions={[
           {
             icon: isReorderMode ? 'check' : 'swap-vertical',
             color: isReorderMode ? colors.primary : colors.onSurface,
             onPress: () => setIsReorderMode(!isReorderMode),
+            accessibilityLabel: 'Reorder habits',
           },
           {
             icon: 'chart-box-outline',
             onPress: () => navigation.navigate('OverallAnalytics'),
+            accessibilityLabel: 'View overall analytics',
           },
         ]}
       />
@@ -178,22 +185,21 @@ export const HabitsScreen: React.FC = () => {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          {
-            backgroundColor: colors.primary,
-            bottom: insets.bottom + 74,
-          },
-        ]}
+      <FloatingActionButton
+        icon="plus"
+        size="standard"
+        colorVariant="primary"
+        style={{
+          position: 'absolute',
+          right: 20,
+          bottom: insets.bottom + 92,
+        }}
         onPress={() => {
           setHabitToEdit(null);
           setShowHabitModal(true);
         }}
-        activeOpacity={0.85}
-      >
-        <MaterialCommunityIcons name="plus" size={28} color={colors.onPrimary} />
-      </TouchableOpacity>
+        accessibilityLabel="Create new habit"
+      />
 
       {/* Upsert Modal */}
       <HabitUpsertModal

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { FilledTonalButton } from '../m3';
 
 interface EmptyStateProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -18,7 +19,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionText,
   onAction,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, fontFamily } = useTheme();
 
   return (
     <View style={styles.container}>
@@ -27,16 +28,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           styles.iconCircle,
           {
             backgroundColor: colors.primaryContainer,
+            borderRadius: shapes.full,
           },
         ]}
       >
-        <MaterialCommunityIcons name={icon} size={48} color={colors.primary} />
+        <MaterialCommunityIcons name={icon} size={48} color={colors.onPrimaryContainer} />
       </View>
       <Text
         style={[
           styles.title,
           {
             color: colors.onSurface,
+            ...typography.titleLarge,
             fontFamily,
           },
         ]}
@@ -48,6 +51,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           styles.description,
           {
             color: colors.onSurfaceVariant,
+            ...typography.bodyMedium,
             fontFamily,
           },
         ]}
@@ -56,15 +60,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       </Text>
 
       {actionText && onAction ? (
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={onAction}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.buttonText, { color: colors.onPrimary, fontFamily }]}>
-            {actionText}
-          </Text>
-        </TouchableOpacity>
+        <View style={{ marginTop: 16 }}>
+          <FilledTonalButton
+            label={actionText}
+            onPress={onAction}
+          />
+        </View>
       ) : null}
     </View>
   );

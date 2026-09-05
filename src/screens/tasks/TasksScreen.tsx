@@ -23,7 +23,7 @@ import {
   updateCategoryIndexes,
 } from '../../data/taskRepository';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar, FloatingActionButton } from '../../components/m3';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { CategoryChips } from '../../components/tasks/CategoryChips';
@@ -148,18 +148,20 @@ export const TasksScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title="Tasks"
         subtitle={`${activeTasks.length} pending`}
-        rightActions={[
+        actions={[
           {
             icon: isReorderMode ? 'check' : 'swap-vertical',
             color: isReorderMode ? colors.primary : colors.onSurface,
             onPress: () => setIsReorderMode(!isReorderMode),
+            accessibilityLabel: 'Reorder tasks',
           },
           {
             icon: 'broom',
             onPress: () => setShowCleanDialog(true),
+            accessibilityLabel: 'Clean completed tasks',
           },
         ]}
       />
@@ -273,22 +275,21 @@ export const TasksScreen: React.FC = () => {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          {
-            backgroundColor: colors.primary,
-            bottom: insets.bottom + 74,
-          },
-        ]}
+      <FloatingActionButton
+        icon="plus"
+        size="standard"
+        colorVariant="primary"
+        style={{
+          position: 'absolute',
+          right: 20,
+          bottom: insets.bottom + 92,
+        }}
         onPress={() => {
           setTaskToEdit(null);
           setShowTaskModal(true);
         }}
-        activeOpacity={0.85}
-      >
-        <MaterialCommunityIcons name="plus" size={28} color={colors.onPrimary} />
-      </TouchableOpacity>
+        accessibilityLabel="Add new task"
+      />
 
       {/* Modals & Dialogs */}
       <TaskUpsertModal

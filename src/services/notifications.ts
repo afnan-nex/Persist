@@ -131,53 +131,62 @@ function dayOfWeekToWeekday(dow: DayOfWeek): number {
 }
 
 export async function scheduleHabitReminders(habit: Habit): Promise<void> {
-  await cancelHabitReminders(habit.id);
+  try {
+    await cancelHabitReminders(habit.id);
 
-  if (!habit.reminder || habit.days.length === 0) return;
+    if (!habit.reminder || !habit.days || habit.days.length === 0) return;
 
-  const hours = Math.floor(habit.time / 60);
-  const minutes = habit.time % 60;
+    const hours = Math.floor((habit.time ?? 0) / 60);
+    const minutes = (habit.time ?? 0) % 60;
 
-  for (const day of habit.days) {
-    try {
-      const weekday = dayOfWeekToWeekday(day);
-      await Notifications.scheduleNotificationAsync({
-        identifier: `habit-${habit.id}-${day}`,
-        content: {
-          title: habit.title,
-          body: habit.description || 'Time to complete your habit!',
-          data: { habitId: habit.id, type: 'habit' },
-          sound: 'default',
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-          weekday,
-          hour: hours,
-          minute: minutes,
-        },
-      });
-    } catch (error) {
-      console.warn(`Failed to schedule reminder for habit ${habit.id} on ${day}:`, error);
+    for (const day of habit.days) {
+      try {
+        const weekday = dayOfWeekToWeekday(day);
+        await Notifications.scheduleNotificationAsync({
+          identifier: `habit-${habit.id}-${day}`,
+          content: {
+            title: habit.title,
+            body: habit.description || 'Time to complete your habit!',
+            data: { habitId: habit.id, type: 'habit' },
+            sound: 'default',
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+            weekday,
+            hour: hours,
+            minute: minutes,
+            channelId: 'persist-reminders',
+          },
+        });
+      } catch (error) {
+        console.warn(`Failed to schedule reminder for habit ${habit.id} on ${day}:`, error);
+      }
     }
+  } catch (err) {
+    console.warn('Failed in scheduleHabitReminders:', err);
   }
 }
 
 export async function cancelHabitReminders(habitId: number): Promise<void> {
-  const allDays: DayOfWeek[] = [
-    'MONDAY',
-    'TUESDAY',
-    'WEDNESDAY',
-    'THURSDAY',
-    'FRIDAY',
-    'SATURDAY',
-    'SUNDAY',
-  ];
+  try {
+    const allDays: DayOfWeek[] = [
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+      'SUNDAY',
+    ];
 
-  for (const day of allDays) {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(`habit-${habitId}-${day}`);
-    } catch {
-      // Ignore if not present
+    for (const day of allDays) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(`habit-${habitId}-${day}`);
+      } catch {
+        // Ignore if not present
+      }
     }
+  } catch (err) {
+    console.warn('Failed in cancelHabitReminders:', err);
   }
 }

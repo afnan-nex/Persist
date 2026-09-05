@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -13,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Category } from '../../types';
 import { useTheme } from '../../theme/ThemeContext';
 import { ColorPickerModal } from '../common/ColorPickerModal';
+import { KeyboardAwareDialog } from '../common/KeyboardAwareModal';
 
 interface CategoryManageModalProps {
   visible: boolean;
@@ -31,11 +31,12 @@ export const CategoryManageModal: React.FC<CategoryManageModalProps> = ({
   onReorderCategories,
   onClose,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
 
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#6366F1');
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
   const handleAdd = () => {
     if (!newCatName.trim()) return;
@@ -75,176 +76,171 @@ export const CategoryManageModal: React.FC<CategoryManageModalProps> = ({
     );
   };
 
+  const scrollRef = useRef<ScrollView>(null);
+
+  const handleInputFocus = () => {
+    // Smoothly scroll down so the New Category input and Add button are fully visible above the keyboard
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+
+  const headerContent = (
+    <View style={styles.header}>
+      <Text style={[styles.title, { color: colors.onSurface, ...typography.headlineSmall, fontFamily }]}>
+        Manage Categories
+      </Text>
+      <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+        <MaterialCommunityIcons name="close" size={24} color={colors.onSurface} />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View
-          style={[
-            styles.dialog,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
-            },
-          ]}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.onSurface, fontFamily }]}>
-              Manage Categories
-            </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <MaterialCommunityIcons name="close" size={24} color={colors.onSurface} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Existing Categories List */}
-          <ScrollView style={styles.catList} showsVerticalScrollIndicator={false}>
-            {categories.map((cat, idx) => (
-              <View
-                key={cat.id}
-                style={[
-                  styles.catItem,
-                  {
-                    backgroundColor: colors.surfaceVariant,
-                  },
-                ]}
+    <>
+      <KeyboardAwareDialog
+        visible={visible}
+        onRequestClose={onClose}
+        header={headerContent}
+        scrollRef={scrollRef}
+        maxWidth={360}
+      >
+        {/* Existing Categories List */}
+        <View style={styles.catListWrapper}>
+          {categories.map((cat, idx) => (
+            <View
+              key={cat.id}
+              style={[
+                styles.catItem,
+                {
+                  backgroundColor: colors.surfaceContainerLow,
+                  borderRadius: shapes.medium,
+                },
+              ]}
+            >
+              <View style={[styles.colorBadge, { backgroundColor: cat.color || colors.primary }]} />
+              <Text
+                style={[styles.catItemName, { color: colors.onSurface, ...typography.bodyLarge, fontFamily }]}
+                numberOfLines={1}
               >
-                <View style={[styles.colorBadge, { backgroundColor: cat.color || colors.primary }]} />
-                <Text
-                  style={[styles.catItemName, { color: colors.onSurface, fontFamily }]}
-                  numberOfLines={1}
-                >
-                  {cat.name}
-                </Text>
+                {cat.name}
+              </Text>
 
-                {/* Move Controls */}
-                <View style={styles.moveRow}>
-                  <TouchableOpacity
-                    disabled={idx === 0}
-                    style={[styles.moveBtn, idx === 0 && styles.disabled]}
-                    onPress={() => handleMove(idx, 'up')}
-                  >
-                    <MaterialCommunityIcons
-                      name="chevron-up"
-                      size={20}
-                      color={idx === 0 ? colors.outline : colors.onSurface}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    disabled={idx === categories.length - 1}
-                    style={[styles.moveBtn, idx === categories.length - 1 && styles.disabled]}
-                    onPress={() => handleMove(idx, 'down')}
-                  >
-                    <MaterialCommunityIcons
-                      name="chevron-down"
-                      size={20}
-                      color={idx === categories.length - 1 ? colors.outline : colors.onSurface}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Delete Button */}
+              {/* Move Controls */}
+              <View style={styles.moveRow}>
                 <TouchableOpacity
-                  style={styles.deleteBtn}
-                  onPress={() => handleDelete(cat)}
-                  disabled={categories.length <= 1}
+                  disabled={idx === 0}
+                  style={[styles.moveBtn, idx === 0 && styles.disabled]}
+                  onPress={() => handleMove(idx, 'up')}
+                  activeOpacity={0.7}
                 >
                   <MaterialCommunityIcons
-                    name="trash-can-outline"
-                    size={18}
-                    color={categories.length <= 1 ? colors.outline : colors.error}
+                    name="chevron-up"
+                    size={20}
+                    color={idx === 0 ? colors.outline : colors.onSurface}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={idx === categories.length - 1}
+                  style={[styles.moveBtn, idx === categories.length - 1 && styles.disabled]}
+                  onPress={() => handleMove(idx, 'down')}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name="chevron-down"
+                    size={20}
+                    color={idx === categories.length - 1 ? colors.outline : colors.onSurface}
                   />
                 </TouchableOpacity>
               </View>
-            ))}
-          </ScrollView>
 
-          {/* Add Category Section */}
-          <View
-            style={[
-              styles.addSection,
-              {
-                borderTopColor: colors.outlineVariant,
-              },
-            ]}
-          >
-            <Text style={[styles.addLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
-              New Category
-            </Text>
-            <View style={styles.addRow}>
+              {/* Delete Button */}
               <TouchableOpacity
-                style={[styles.colorPickerTrigger, { backgroundColor: newCatColor }]}
-                onPress={() => setShowColorPicker(true)}
-              >
-                <MaterialCommunityIcons name="palette" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-
-              <TextInput
-                style={[
-                  styles.addInput,
-                  {
-                    backgroundColor: colors.surfaceVariant,
-                    color: colors.onSurface,
-                    fontFamily,
-                  },
-                ]}
-                placeholder="Category Name"
-                placeholderTextColor={colors.onSurfaceVariant}
-                value={newCatName}
-                onChangeText={setNewCatName}
-              />
-
-              <TouchableOpacity
-                style={[
-                  styles.addButton,
-                  {
-                    backgroundColor: newCatName.trim() ? colors.primary : colors.surfaceVariant,
-                  },
-                ]}
-                disabled={!newCatName.trim()}
-                onPress={handleAdd}
+                style={styles.deleteBtn}
+                onPress={() => handleDelete(cat)}
+                disabled={categories.length <= 1}
+                activeOpacity={0.7}
               >
                 <MaterialCommunityIcons
-                  name="plus"
-                  size={24}
-                  color={newCatName.trim() ? colors.onPrimary : colors.onSurfaceVariant}
+                  name="trash-can-outline"
+                  size={18}
+                  color={categories.length <= 1 ? colors.outline : colors.error}
                 />
               </TouchableOpacity>
             </View>
-          </View>
+          ))}
         </View>
 
-        <ColorPickerModal
-          visible={showColorPicker}
-          initialColor={newCatColor}
-          onConfirm={(c) => {
-            setNewCatColor(c);
-            setShowColorPicker(false);
-          }}
-          onCancel={() => setShowColorPicker(false)}
-        />
-      </View>
-    </Modal>
+        {/* Add Category Section */}
+        <View style={styles.addSection}>
+          <Text style={[styles.addLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
+            New Category
+          </Text>
+          <View style={styles.addRow}>
+            <TouchableOpacity
+              style={[styles.colorPickerTrigger, { backgroundColor: newCatColor }]}
+              onPress={() => setShowColorPicker(true)}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="palette" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <TextInput
+              ref={inputRef}
+              style={[
+                styles.addInput,
+                {
+                  backgroundColor: colors.surfaceContainerHighest,
+                  color: colors.onSurface,
+                  borderRadius: shapes.small,
+                  fontFamily,
+                },
+              ]}
+              placeholder="Category Name"
+              placeholderTextColor={colors.onSurfaceVariant}
+              value={newCatName}
+              onChangeText={setNewCatName}
+              showSoftInputOnFocus={true}
+              onFocus={handleInputFocus}
+              returnKeyType="done"
+              onSubmitEditing={handleAdd}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: newCatName.trim() ? colors.primary : colors.surfaceContainerHighest,
+                },
+              ]}
+              disabled={!newCatName.trim()}
+              onPress={handleAdd}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name="plus"
+                size={24}
+                color={newCatName.trim() ? colors.onPrimary : colors.onSurfaceVariant}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAwareDialog>
+
+      <ColorPickerModal
+        visible={showColorPicker}
+        initialColor={newCatColor}
+        onConfirm={(c) => {
+          setNewCatColor(c);
+          setShowColorPicker(false);
+        }}
+        onCancel={() => setShowColorPicker(false)}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  dialog: {
-    width: '100%',
-    maxWidth: 360,
-    maxHeight: '80%',
-    borderRadius: 28,
-    padding: 20,
-    borderWidth: 1,
-    elevation: 10,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,8 +254,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     padding: 4,
   },
-  catList: {
-    maxHeight: 220,
+  catListWrapper: {
     marginBottom: 16,
   },
   catItem: {
@@ -295,8 +290,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   addSection: {
-    borderTopWidth: 1,
-    paddingTop: 16,
+    paddingTop: 12,
   },
   addLabel: {
     fontSize: 12,

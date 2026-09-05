@@ -9,7 +9,7 @@ interface WeeklyChartProps {
 type Period = '2M' | '4M' | '6M' | '1Y';
 
 export const WeeklyChart: React.FC<WeeklyChartProps> = ({ data }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
   const [period, setPeriod] = useState<Period>('4M');
 
   const getPeriodCount = (p: Period): number => {
@@ -40,23 +40,24 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({ data }) => {
       style={[
         styles.card,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.outlineVariant,
+          backgroundColor: colors.surfaceContainerLow,
+          borderRadius: shapes.large,
+          elevation: elevation.level1,
         },
       ]}
     >
       {/* Header & Filter Row */}
       <View style={styles.headerRow}>
         <View>
-          <Text style={[styles.title, { color: colors.onSurface, fontFamily }]}>
+          <Text style={[styles.title, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
             Weekly Comparison
           </Text>
-          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant, ...typography.bodySmall, fontFamily }]}>
             Average: {avg} days/week
           </Text>
         </View>
 
-        <View style={[styles.filterGroup, { backgroundColor: colors.surfaceVariant }]}>
+        <View style={[styles.filterGroup, { backgroundColor: colors.surfaceContainerHigh, borderRadius: shapes.full }]}>
           {(['2M', '4M', '6M', '1Y'] as Period[]).map((p) => {
             const isSelected = period === p;
             return (
@@ -64,7 +65,8 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({ data }) => {
                 key={p}
                 style={[
                   styles.filterBtn,
-                  isSelected && { backgroundColor: colors.primary },
+                  { borderRadius: shapes.full },
+                  isSelected && { backgroundColor: colors.secondaryContainer },
                 ]}
                 onPress={() => setPeriod(p)}
                 activeOpacity={0.8}
@@ -73,7 +75,8 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({ data }) => {
                   style={[
                     styles.filterText,
                     {
-                      color: isSelected ? colors.onPrimary : colors.onSurfaceVariant,
+                      color: isSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant,
+                      ...typography.labelSmall,
                       fontWeight: isSelected ? '700' : '500',
                       fontFamily,
                     },
@@ -126,7 +129,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
   },

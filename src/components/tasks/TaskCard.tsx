@@ -32,7 +32,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   canMoveUp = false,
   canMoveDown = false,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, fontFamily, shapes, elevation, typography } = useTheme();
 
   const handleToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -83,8 +83,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       style={[
         styles.card,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.outlineVariant,
+          backgroundColor: colors.surfaceContainerLow,
+          borderRadius: shapes.large,
+          elevation: elevation.level1,
         },
       ]}
     >
@@ -225,8 +226,11 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 18,
     marginBottom: 8,
-    borderWidth: 1,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   checkbox: {
     width: 24,

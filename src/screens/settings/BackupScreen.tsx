@@ -15,13 +15,13 @@ import { exportToJson, importFromJson } from '../../data/backupRepository';
 import { getHabits, getHabitStatuses } from '../../data/habitRepository';
 import { getTasks, getCategories } from '../../data/taskRepository';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar } from '../../components/m3';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 
 export const BackupScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
 
   const [stats, setStats] = useState({
     habits: 0,
@@ -88,11 +88,13 @@ export const BackupScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title="Backup & Restore"
-        leftAction={{
+        variant="small"
+        navigationIcon={{
           icon: 'arrow-left',
           onPress: () => navigation.goBack(),
+          accessibilityLabel: 'Go back',
         }}
       />
 
@@ -106,47 +108,48 @@ export const BackupScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
-          <Text style={[styles.cardTitle, { color: colors.onSurface, fontFamily }]}>
+          <Text style={[styles.cardTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
             Current Storage
           </Text>
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.primary, fontFamily }]}>
+              <Text style={[styles.statValue, { color: colors.primary, ...typography.headlineMedium, fontFamily }]}>
                 {stats.habits}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
                 Habits
               </Text>
             </View>
 
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.primary, fontFamily }]}>
+              <Text style={[styles.statValue, { color: colors.primary, ...typography.headlineMedium, fontFamily }]}>
                 {stats.tasks}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
                 Tasks
               </Text>
             </View>
 
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.primary, fontFamily }]}>
+              <Text style={[styles.statValue, { color: colors.primary, ...typography.headlineMedium, fontFamily }]}>
                 {stats.categories}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
                 Categories
               </Text>
             </View>
 
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.primary, fontFamily }]}>
+              <Text style={[styles.statValue, { color: colors.primary, ...typography.headlineMedium, fontFamily }]}>
                 {stats.statuses}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.statLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
                 Check-ins
               </Text>
             </View>
@@ -157,7 +160,14 @@ export const BackupScreen: React.FC = () => {
         <View style={styles.actionsContainer}>
           {/* Export Button */}
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.surfaceContainerLow,
+                borderRadius: shapes.large,
+                elevation: elevation.level1,
+              },
+            ]}
             onPress={handleExport}
             disabled={isExporting}
             activeOpacity={0.8}
@@ -170,10 +180,10 @@ export const BackupScreen: React.FC = () => {
               )}
             </View>
             <View style={styles.actionTextCol}>
-              <Text style={[styles.actionTitle, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.actionTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
                 Export Backup (JSON)
               </Text>
-              <Text style={[styles.actionDesc, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.actionDesc, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
                 Generate a portable JSON file of all your habits, tasks, categories, and progress.
               </Text>
             </View>
@@ -181,12 +191,19 @@ export const BackupScreen: React.FC = () => {
 
           {/* Import Button */}
           <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.surfaceContainerLow,
+                borderRadius: shapes.large,
+                elevation: elevation.level1,
+              },
+            ]}
             onPress={() => setShowImportConfirm(true)}
             disabled={isImporting}
             activeOpacity={0.8}
           >
-            <View style={[styles.actionIconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.actionIconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               {isImporting ? (
                 <ActivityIndicator color={colors.onSurface} size="small" />
               ) : (
@@ -194,10 +211,10 @@ export const BackupScreen: React.FC = () => {
               )}
             </View>
             <View style={styles.actionTextCol}>
-              <Text style={[styles.actionTitle, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.actionTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
                 Restore from Backup
               </Text>
-              <Text style={[styles.actionDesc, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.actionDesc, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
                 Load a JSON file exported from Persist or Grit to restore your data.
               </Text>
             </View>
@@ -209,13 +226,13 @@ export const BackupScreen: React.FC = () => {
           style={[
             styles.noticeCard,
             {
-              backgroundColor: colors.surfaceVariant,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.medium,
             },
           ]}
         >
           <MaterialCommunityIcons name="information-outline" size={20} color={colors.primary} />
-          <Text style={[styles.noticeText, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.noticeText, { color: colors.onSurfaceVariant, ...typography.bodySmall, fontFamily }]}>
             Persist uses the open schema version 5 format, providing 100% interoperability with Grit.
             Backups are stored offline on your device and are never transmitted to external servers.
           </Text>
@@ -250,7 +267,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
   },
@@ -285,7 +301,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 18,
     borderRadius: 22,
-    borderWidth: 1,
     elevation: 1,
   },
   actionIconCircle: {
@@ -312,7 +327,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     borderRadius: 18,
-    borderWidth: 1,
     gap: 12,
     alignItems: 'flex-start',
   },

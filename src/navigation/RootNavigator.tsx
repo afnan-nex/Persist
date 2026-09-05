@@ -3,6 +3,7 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { PlatformPressable } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 
@@ -15,7 +16,6 @@ import { OverallAnalyticsScreen } from '../screens/habits/OverallAnalyticsScreen
 import { LookAndFeelScreen } from '../screens/settings/LookAndFeelScreen';
 import { BackupScreen } from '../screens/settings/BackupScreen';
 import { AboutScreen } from '../screens/settings/AboutScreen';
-import { SupportModal } from '../screens/settings/SupportModal';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -80,25 +80,32 @@ function MainTabs() {
       initialRouteName={appSettings.startingPage === 'habits' ? 'HabitsTab' : 'TasksTab'}
       screenOptions={{
         headerShown: false,
+        tabBarButton: (props) => (
+          <PlatformPressable
+            {...props}
+            pressColor="transparent"
+            android_ripple={{ color: 'transparent' }}
+          />
+        ),
         tabBarStyle: {
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          elevation: 8,
-          backgroundColor: colors.surface,
-          borderTopColor: colors.outlineVariant,
-          borderTopWidth: 1,
-          height: 64 + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 8),
-          paddingTop: 8,
+          elevation: 3,
+          backgroundColor: colors.surfaceContainer,
+          borderTopWidth: 0,
+          height: 80 + insets.bottom, // 80dp M3 NavigationBar height
+          paddingBottom: Math.max(insets.bottom, 12),
+          paddingTop: 12,
         },
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.onSurface,
         tabBarInactiveTintColor: colors.onSurfaceVariant,
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '700',
+          fontWeight: '600',
           fontFamily,
+          marginTop: 4,
         },
       }}
     >
@@ -107,14 +114,18 @@ function MainTabs() {
         component={TasksScreen}
         options={{
           tabBarLabel: 'Tasks',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View
               style={[
                 styles.tabIconWrapper,
-                focused && { backgroundColor: colors.primaryContainer },
+                focused && { backgroundColor: colors.secondaryContainer },
               ]}
             >
-              <TasksTabIcon focused={focused} color={focused ? colors.primary : color} size={size} />
+              <TasksTabIcon
+                focused={focused}
+                color={focused ? colors.onSecondaryContainer : colors.onSurfaceVariant}
+                size={24}
+              />
             </View>
           ),
         }}
@@ -125,14 +136,18 @@ function MainTabs() {
         component={HabitsScreen}
         options={{
           tabBarLabel: 'Habits',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View
               style={[
                 styles.tabIconWrapper,
-                focused && { backgroundColor: colors.primaryContainer },
+                focused && { backgroundColor: colors.secondaryContainer },
               ]}
             >
-              <HabitsTabIcon focused={focused} color={focused ? colors.primary : color} size={size} />
+              <HabitsTabIcon
+                focused={focused}
+                color={focused ? colors.onSecondaryContainer : colors.onSurfaceVariant}
+                size={24}
+              />
             </View>
           ),
         }}
@@ -143,14 +158,18 @@ function MainTabs() {
         component={SettingsScreen}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ focused }) => (
             <View
               style={[
                 styles.tabIconWrapper,
-                focused && { backgroundColor: colors.primaryContainer },
+                focused && { backgroundColor: colors.secondaryContainer },
               ]}
             >
-              <SettingsTabIcon focused={focused} color={focused ? colors.primary : color} size={size} />
+              <SettingsTabIcon
+                focused={focused}
+                color={focused ? colors.onSecondaryContainer : colors.onSurfaceVariant}
+                size={24}
+              />
             </View>
           ),
         }}
@@ -189,7 +208,6 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen name="LookAndFeel" component={LookAndFeelScreen} />
         <Stack.Screen name="Backup" component={BackupScreen} />
         <Stack.Screen name="About" component={AboutScreen} />
-        <Stack.Screen name="Support" component={SupportModal} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -197,8 +215,10 @@ export const RootNavigator: React.FC = () => {
 
 const styles = StyleSheet.create({
   tabIconWrapper: {
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    width: 64,
+    height: 32,
     borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

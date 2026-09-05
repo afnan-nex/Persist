@@ -12,6 +12,7 @@ import { Habit } from '../../types';
 import { epochDayToDate } from '../../data/calculations';
 import { getCompletedHabitsForDate } from '../../data/habitRepository';
 import { useTheme } from '../../theme/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DayCompletionSheetProps {
   visible: boolean;
@@ -24,7 +25,8 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
   epochDay,
   onClose,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
   const [completedHabits, setCompletedHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -54,13 +56,16 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
+        <TouchableOpacity style={[styles.backdrop, { backgroundColor: colors.scrim + '70' }]} activeOpacity={1} onPress={onClose} />
         <View
           style={[
             styles.sheet,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerHigh,
+              borderTopLeftRadius: shapes.extraLarge,
+              borderTopRightRadius: shapes.extraLarge,
+              elevation: elevation.level3,
+              paddingBottom: Math.max(insets.bottom, 16) + 16,
             },
           ]}
         >
@@ -68,10 +73,10 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
 
           <View style={styles.header}>
             <View>
-              <Text style={[styles.title, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.title, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
                 {dateString}
               </Text>
-              <Text style={[styles.subtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.subtitle, { color: colors.onSurfaceVariant, ...typography.bodySmall, fontFamily }]}>
                 {completedHabits.length}{' '}
                 {completedHabits.length === 1 ? 'habit' : 'habits'} completed
               </Text>
@@ -83,7 +88,7 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
             {loading ? (
-              <Text style={[styles.loadingText, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.loadingText, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
                 Loading...
               </Text>
             ) : completedHabits.length === 0 ? (
@@ -94,7 +99,7 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
                   color={colors.outline}
                 />
                 <Text
-                  style={[styles.emptyText, { color: colors.onSurfaceVariant, fontFamily }]}
+                  style={[styles.emptyText, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}
                 >
                   No habits were completed on this day.
                 </Text>
@@ -106,16 +111,17 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
                   style={[
                     styles.habitItem,
                     {
-                      backgroundColor: colors.surfaceVariant,
+                      backgroundColor: colors.surfaceContainerLow,
+                      borderRadius: shapes.medium,
                     },
                   ]}
                 >
-                  <View style={[styles.checkCircle, { backgroundColor: colors.primary }]}>
+                  <View style={[styles.checkCircle, { backgroundColor: colors.primary, borderRadius: shapes.full }]}>
                     <MaterialCommunityIcons name="check" size={16} color={colors.onPrimary} />
                   </View>
                   <View style={styles.habitInfo}>
                     <Text
-                      style={[styles.habitTitle, { color: colors.onSurface, fontFamily }]}
+                      style={[styles.habitTitle, { color: colors.onSurface, ...typography.bodyMedium, fontWeight: '600', fontFamily }]}
                     >
                       {h.title}
                     </Text>
@@ -123,7 +129,7 @@ export const DayCompletionSheet: React.FC<DayCompletionSheetProps> = ({
                       <Text
                         style={[
                           styles.habitDesc,
-                          { color: colors.onSurfaceVariant, fontFamily },
+                          { color: colors.onSurfaceVariant, ...typography.bodySmall, fontFamily },
                         ]}
                         numberOfLines={1}
                       >
@@ -157,7 +163,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 36,
     maxHeight: '60%',
-    borderWidth: 1,
+    elevation: 16,
   },
   dragHandle: {
     width: 40,

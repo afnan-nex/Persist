@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { OverallAnalytics } from '../../types';
 import { getOverallAnalytics } from '../../data/habitRepository';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar } from '../../components/m3';
 import { HeatMap } from '../../components/habits/HeatMap';
 import { WeekdayFrequencyChart } from '../../components/habits/WeekdayFrequencyChart';
 import { DayCompletionSheet } from '../../components/habits/DayCompletionSheet';
@@ -14,7 +14,7 @@ import { DayCompletionSheet } from '../../components/habits/DayCompletionSheet';
 export const OverallAnalyticsScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { colors, appSettings, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, appSettings, fontFamily } = useTheme();
 
   const [analytics, setAnalytics] = useState<OverallAnalytics | null>(null);
   const [selectedEpochDay, setSelectedEpochDay] = useState<number | null>(null);
@@ -26,15 +26,17 @@ export const OverallAnalyticsScreen: React.FC = () => {
   if (!analytics) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <AppHeader
+        <TopAppBar
           title="Overall Analytics"
-          leftAction={{
+          variant="small"
+          navigationIcon={{
             icon: 'arrow-left',
             onPress: () => navigation.goBack(),
+            accessibilityLabel: 'Go back',
           }}
         />
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.loadingText, { color: colors.onSurfaceVariant, ...typography.bodyLarge, fontFamily }]}>
             Loading analytics...
           </Text>
         </View>
@@ -53,12 +55,14 @@ export const OverallAnalyticsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title="Overall Analytics"
         subtitle="All habits aggregate performance"
-        leftAction={{
+        variant="small"
+        navigationIcon={{
           icon: 'arrow-left',
           onPress: () => navigation.goBack(),
+          accessibilityLabel: 'Go back',
         }}
       />
 
@@ -72,8 +76,9 @@ export const OverallAnalyticsScreen: React.FC = () => {
           style={[
             styles.metricCard,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
@@ -81,7 +86,7 @@ export const OverallAnalyticsScreen: React.FC = () => {
             <Text
               style={[
                 styles.overallConsistencyText,
-                { color: colors.primary, fontFamily },
+                { color: colors.primary, ...typography.displayLarge, fontFamily },
               ]}
             >
               {consistencyPercent}%
@@ -89,7 +94,7 @@ export const OverallAnalyticsScreen: React.FC = () => {
             <Text
               style={[
                 styles.overallConsistencyLabel,
-                { color: colors.onSurfaceVariant, fontFamily },
+                { color: colors.onSurfaceVariant, ...typography.labelLarge, fontFamily },
               ]}
             >
               Overall Consistency
@@ -103,14 +108,15 @@ export const OverallAnalyticsScreen: React.FC = () => {
             style={[
               styles.card,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.outlineVariant,
+                backgroundColor: colors.surfaceContainerLow,
+                borderRadius: shapes.large,
+                elevation: elevation.level1,
               },
             ]}
           >
             <View style={styles.cardHeaderRow}>
               <MaterialCommunityIcons name="podium" size={20} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.onSurface, fontFamily }]}>
+              <Text style={[styles.cardTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
                 Top Performing Habits
               </Text>
             </View>
@@ -128,7 +134,7 @@ export const OverallAnalyticsScreen: React.FC = () => {
 
                     <View style={styles.habitCol}>
                       <Text
-                        style={[styles.habitTitle, { color: colors.onSurface, fontFamily }]}
+                        style={[styles.habitTitle, { color: colors.onSurface, ...typography.bodyMedium, fontWeight: '600', fontFamily }]}
                         numberOfLines={1}
                       >
                         {item.title}
@@ -136,7 +142,7 @@ export const OverallAnalyticsScreen: React.FC = () => {
                       <View
                         style={[
                           styles.consistencyBarBg,
-                          { backgroundColor: colors.surfaceVariant },
+                          { backgroundColor: colors.surfaceVariant, borderRadius: shapes.full },
                         ]}
                       >
                         <View
@@ -145,6 +151,7 @@ export const OverallAnalyticsScreen: React.FC = () => {
                             {
                               width: `${pct}%`,
                               backgroundColor: colors.primary,
+                              borderRadius: shapes.full,
                             },
                           ]}
                         />
@@ -154,7 +161,7 @@ export const OverallAnalyticsScreen: React.FC = () => {
                     <Text
                       style={[
                         styles.habitPct,
-                        { color: colors.onSurface, fontFamily },
+                        { color: colors.onSurface, ...typography.labelLarge, fontFamily },
                       ]}
                     >
                       {pct}%
@@ -171,15 +178,16 @@ export const OverallAnalyticsScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
-          <Text style={[styles.cardTitle, { color: colors.onSurface, fontFamily }]}>
+          <Text style={[styles.cardTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
             Aggregate Heatmap
           </Text>
-          <Text style={[styles.cardSubtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.cardSubtitle, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
             Tap any day to see habits completed
           </Text>
           <HeatMap
@@ -226,7 +234,6 @@ const styles = StyleSheet.create({
   metricCard: {
     borderRadius: 22,
     padding: 24,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
     alignItems: 'center',
@@ -247,7 +254,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
   },

@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { KeyboardAwareDialog } from './KeyboardAwareModal';
 
 interface ColorPickerModalProps {
   visible: boolean;
@@ -19,17 +20,17 @@ interface ColorPickerModalProps {
 
 const PALETTE = [
   '#6366F1', // Indigo
-  '#3B82F6', // Blue
-  '#06B6D4', // Cyan
-  '#14B8A6', // Teal
-  '#10B981', // Green
-  '#84CC16', // Lime
+  '#2563EB', // Royal Blue
+  '#0D9488', // Teal
+  '#10B981', // Emerald
   '#F59E0B', // Amber
   '#F97316', // Orange
-  '#EF4444', // Red
-  '#EC4899', // Pink
+  '#F43F5E', // Crimson
   '#8B5CF6', // Purple
-  '#64748B', // Slate
+  '#7C3AED', // Violet
+  '#06B6D4', // Cyan
+  '#D946EF', // Berry Pink
+  '#15803D', // Sage
 ];
 
 export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
@@ -38,9 +39,18 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, fontFamily } = useTheme();
   const [selectedColor, setSelectedColor] = useState<string>(initialColor);
   const [customHex, setCustomHex] = useState<string>(initialColor);
+  const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setSelectedColor(initialColor);
+      setCustomHex(initialColor);
+    }
+  }, [visible, initialColor]);
 
   const handleSelect = (c: string) => {
     setSelectedColor(c);
@@ -58,105 +68,102 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
     }
   };
 
+  const handleFocus = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  const headerContent = (
+    <View style={styles.header}>
+      <Text style={[styles.title, { color: colors.onSurface, ...typography.titleLarge, fontFamily }]}>
+        Pick Color
+      </Text>
+    </View>
+  );
+
+  const footerContent = (
+    <View style={styles.actions}>
+      <TouchableOpacity style={styles.btn} onPress={onCancel} activeOpacity={0.7}>
+        <Text style={[styles.btnText, { color: colors.primary, ...typography.labelLarge, fontFamily }]}>
+          Cancel
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.btn, styles.confirmBtn, { backgroundColor: colors.primary, borderRadius: shapes.full }]}
+        onPress={() => onConfirm(selectedColor)}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.btnText, { color: colors.onPrimary, ...typography.labelLarge, fontFamily }]}>
+          Select
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.overlay}>
-        <View
+    <KeyboardAwareDialog
+      visible={visible}
+      onRequestClose={onCancel}
+      header={headerContent}
+      footer={footerContent}
+      scrollRef={scrollRef}
+      maxWidth={340}
+    >
+      {/* Color Preview & Hex Input */}
+      <View style={styles.previewRow}>
+        <View style={[styles.previewCircle, { backgroundColor: selectedColor, borderRadius: shapes.full }]} />
+        <TextInput
+          ref={inputRef}
           style={[
-            styles.dialog,
+            styles.hexInput,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerHighest,
+              color: colors.onSurface,
+              borderRadius: shapes.small,
+              fontFamily,
             },
           ]}
-        >
-          <Text style={[styles.title, { color: colors.onSurface, fontFamily }]}>
-            Pick Color
-          </Text>
-
-          {/* Color Preview */}
-          <View style={styles.previewRow}>
-            <View style={[styles.previewCircle, { backgroundColor: selectedColor }]} />
-            <TextInput
-              style={[
-                styles.hexInput,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.onSurface,
-                  fontFamily,
-                },
-              ]}
-              value={customHex}
-              onChangeText={handleHexChange}
-              placeholder="#RRGGBB"
-              placeholderTextColor={colors.onSurfaceVariant}
-              maxLength={7}
-              autoCapitalize="characters"
-            />
-          </View>
-
-          {/* Color Grid */}
-          <View style={styles.grid}>
-            {PALETTE.map((c) => (
-              <TouchableOpacity
-                key={c}
-                style={[
-                  styles.swatch,
-                  { backgroundColor: c },
-                  selectedColor.toLowerCase() === c.toLowerCase() && styles.activeSwatch,
-                ]}
-                onPress={() => handleSelect(c)}
-                activeOpacity={0.8}
-              >
-                {selectedColor.toLowerCase() === c.toLowerCase() && (
-                  <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Actions */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.btn} onPress={onCancel}>
-              <Text style={[styles.btnText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btn, styles.confirmBtn, { backgroundColor: colors.primary }]}
-              onPress={() => onConfirm(selectedColor)}
-            >
-              <Text style={[styles.btnText, { color: colors.onPrimary, fontFamily }]}>
-                Select
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          value={customHex}
+          onChangeText={handleHexChange}
+          placeholder="#RRGGBB"
+          placeholderTextColor={colors.onSurfaceVariant}
+          maxLength={7}
+          autoCapitalize="characters"
+          showSoftInputOnFocus={true}
+          onFocus={handleFocus}
+          selectTextOnFocus
+        />
       </View>
-    </Modal>
+
+      {/* Color Grid */}
+      <View style={styles.grid}>
+        {PALETTE.map((c) => (
+          <TouchableOpacity
+            key={c}
+            style={[
+              styles.swatch,
+              { backgroundColor: c, borderRadius: shapes.full },
+              selectedColor.toLowerCase() === c.toLowerCase() && styles.activeSwatch,
+            ]}
+            onPress={() => handleSelect(c)}
+            activeOpacity={0.8}
+          >
+            {selectedColor.toLowerCase() === c.toLowerCase() && (
+              <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </KeyboardAwareDialog>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  dialog: {
-    width: '100%',
-    maxWidth: 320,
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    elevation: 8,
+  header: {
+    marginBottom: 16,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 20,
   },
   previewRow: {
     flexDirection: 'row',
@@ -184,12 +191,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   swatch: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },

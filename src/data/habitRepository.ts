@@ -35,20 +35,20 @@ export async function getHabits(): Promise<Habit[]> {
   const rows = await db.getAllAsync<{
     id: number;
     title: string;
-    description: string;
-    index: number;
-    days: string;
-    time: number;
-    reminder: number;
+    description: string | null;
+    index: number | null;
+    days: string | null;
+    time: number | null;
+    reminder: number | null;
   }>('SELECT id, title, description, [index], days, time, reminder FROM habit_index ORDER BY [index] ASC;');
 
   return rows.map((r) => ({
     id: r.id,
-    title: r.title,
-    description: r.description,
-    index: r.index,
-    days: parseDays(r.days),
-    time: r.time,
+    title: r.title || 'Untitled Habit',
+    description: r.description || '',
+    index: r.index ?? 0,
+    days: parseDays(r.days || ''),
+    time: r.time ?? 540,
     reminder: r.reminder === 1,
   }));
 }
@@ -58,21 +58,21 @@ export async function getHabitById(id: number): Promise<Habit | null> {
   const r = await db.getFirstAsync<{
     id: number;
     title: string;
-    description: string;
-    index: number;
-    days: string;
-    time: number;
-    reminder: number;
+    description: string | null;
+    index: number | null;
+    days: string | null;
+    time: number | null;
+    reminder: number | null;
   }>('SELECT id, title, description, [index], days, time, reminder FROM habit_index WHERE id = ?;', [id]);
 
   if (!r) return null;
   return {
     id: r.id,
-    title: r.title,
-    description: r.description,
-    index: r.index,
-    days: parseDays(r.days),
-    time: r.time,
+    title: r.title || 'Untitled Habit',
+    description: r.description || '',
+    index: r.index ?? 0,
+    days: parseDays(r.days || ''),
+    time: r.time ?? 540,
     reminder: r.reminder === 1,
   };
 }
@@ -81,17 +81,25 @@ export async function upsertHabit(habit: Omit<Habit, 'id'> & { id?: number }): P
   const db = await getDatabase();
   let habitId: number;
 
+  const title = (habit.title || '').trim() || 'Untitled Habit';
+  const description = (habit.description || '').trim();
+  const days = habit.days && habit.days.length > 0 ? habit.days : ALL_DAYS_OF_WEEK;
+  const time = typeof habit.time === 'number' ? habit.time : 540;
+  const reminder = habit.reminder ? 1 : 0;
+
   if (habit.id && habit.id > 0) {
     habitId = habit.id;
+    const existing = await getHabitById(habitId);
+    const resolvedIndex = habit.index ?? existing?.index ?? 0;
     await db.runAsync(
       'UPDATE habit_index SET title = ?, description = ?, [index] = ?, days = ?, time = ?, reminder = ? WHERE id = ?;',
       [
-        habit.title,
-        habit.description,
-        habit.index,
-        serializeDays(habit.days),
-        habit.time,
-        habit.reminder ? 1 : 0,
+        title,
+        description,
+        resolvedIndex,
+        serializeDays(days),
+        time,
+        reminder,
         habitId,
       ]
     );
@@ -103,31 +111,36 @@ export async function upsertHabit(habit: Omit<Habit, 'id'> & { id?: number }): P
     const res = await db.runAsync(
       'INSERT INTO habit_index (title, description, [index], days, time, reminder) VALUES (?, ?, ?, ?, ?, ?);',
       [
-        habit.title,
-        habit.description,
+        title,
+        description,
         newIndex,
-        serializeDays(habit.days),
-        habit.time,
-        habit.reminder ? 1 : 0,
+        serializeDays(days),
+        time,
+        reminder,
       ]
     );
     habitId = res.lastInsertRowId;
   }
 
-  const savedHabit: Habit = {
-    id: habitId,
-    title: habit.title,
-    description: habit.description,
-    index: habit.index ?? 0,
-    days: habit.days,
-    time: habit.time,
-    reminder: habit.reminder,
-  };
+  // Safe notification handling: notification failures must NEVER prevent saving
+  try {
+    const savedHabit: Habit = {
+      id: habitId,
+      title,
+      description,
+      index: habit.index ?? 0,
+      days,
+      time,
+      reminder: habit.reminder ?? false,
+    };
 
-  if (savedHabit.reminder) {
-    await scheduleHabitReminders(savedHabit);
-  } else {
-    await cancelHabitReminders(habitId);
+    if (savedHabit.reminder) {
+      await scheduleHabitReminders(savedHabit);
+    } else {
+      await cancelHabitReminders(habitId);
+    }
+  } catch (notifErr) {
+    console.warn('Notification scheduling warning:', notifErr);
   }
 
   return habitId;

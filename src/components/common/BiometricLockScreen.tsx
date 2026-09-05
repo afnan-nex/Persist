@@ -3,13 +3,14 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { authenticateUser } from '../../services/biometrics';
 import { useTheme } from '../../theme/ThemeContext';
+import { FilledButton } from '../m3';
 
 interface BiometricLockScreenProps {
   onUnlock: () => void;
 }
 
 export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({ onUnlock }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, fontFamily } = useTheme();
   const [error, setError] = useState<string | null>(null);
 
   const attemptUnlock = async () => {
@@ -28,33 +29,28 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({ onUnlo
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.iconCircle, { backgroundColor: colors.primaryContainer }]}>
-        <MaterialCommunityIcons name="lock" size={48} color={colors.primary} />
+      <View style={[styles.iconCircle, { backgroundColor: colors.primaryContainer, borderRadius: shapes.full }]}>
+        <MaterialCommunityIcons name="lock" size={48} color={colors.onPrimaryContainer} />
       </View>
 
-      <Text style={[styles.title, { color: colors.onBackground, fontFamily }]}>
+      <Text style={[styles.title, { color: colors.onBackground, ...typography.headlineMedium, fontFamily }]}>
         Persist is Locked
       </Text>
-      <Text style={[styles.subtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+      <Text style={[styles.subtitle, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
         Authenticate with your fingerprint or device PIN to continue
       </Text>
 
       {error ? (
-        <Text style={[styles.errorText, { color: colors.error, fontFamily }]}>
+        <Text style={[styles.errorText, { color: colors.error, ...typography.bodyMedium, fontFamily }]}>
           {error}
         </Text>
       ) : null}
 
-      <TouchableOpacity
-        style={[styles.unlockButton, { backgroundColor: colors.primary }]}
+      <FilledButton
+        label="Unlock"
+        icon="fingerprint"
         onPress={attemptUnlock}
-        activeOpacity={0.8}
-      >
-        <MaterialCommunityIcons name="fingerprint" size={24} color={colors.onPrimary} />
-        <Text style={[styles.unlockButtonText, { color: colors.onPrimary, fontFamily }]}>
-          Unlock
-        </Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 };

@@ -7,7 +7,7 @@ interface WeekdayFrequencyChartProps {
 }
 
 export const WeekdayFrequencyChart: React.FC<WeekdayFrequencyChartProps> = ({ data }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const maxVal = Math.max(1, ...Object.values(data));
@@ -17,12 +17,13 @@ export const WeekdayFrequencyChart: React.FC<WeekdayFrequencyChartProps> = ({ da
       style={[
         styles.card,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.outlineVariant,
+          backgroundColor: colors.surfaceContainerLow,
+          borderRadius: shapes.large,
+          elevation: elevation.level1,
         },
       ]}
     >
-      <Text style={[styles.title, { color: colors.onSurface, fontFamily }]}>
+      <Text style={[styles.title, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
         Weekday Breakdown
       </Text>
 
@@ -88,7 +89,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
   },

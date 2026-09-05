@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { HabitWithAnalytics } from '../../types';
 import { getHabitsWithAnalytics } from '../../data/habitRepository';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar } from '../../components/m3';
 import { HeatMap } from '../../components/habits/HeatMap';
 import { WeeklyChart } from '../../components/habits/WeeklyChart';
 import { WeekdayFrequencyChart } from '../../components/habits/WeekdayFrequencyChart';
@@ -16,7 +16,7 @@ export const HabitAnalyticsScreen: React.FC = () => {
   const route = useRoute<any>();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { colors, appSettings, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, appSettings, fontFamily } = useTheme();
 
   const habitId = route.params?.habitId as number;
   const [analytics, setAnalytics] = useState<HabitWithAnalytics | null>(null);
@@ -34,15 +34,17 @@ export const HabitAnalyticsScreen: React.FC = () => {
   if (!analytics) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <AppHeader
+        <TopAppBar
           title="Analytics"
-          leftAction={{
+          variant="small"
+          navigationIcon={{
             icon: 'arrow-left',
             onPress: () => navigation.goBack(),
+            accessibilityLabel: 'Go back',
           }}
         />
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.loadingText, { color: colors.onSurfaceVariant, ...typography.bodyLarge, fontFamily }]}>
             Loading analytics...
           </Text>
         </View>
@@ -61,12 +63,14 @@ export const HabitAnalyticsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title={habit.title}
         subtitle="Habit Analytics"
-        leftAction={{
+        variant="small"
+        navigationIcon={{
           icon: 'arrow-left',
           onPress: () => navigation.goBack(),
+          accessibilityLabel: 'Go back',
         }}
       />
 
@@ -80,8 +84,9 @@ export const HabitAnalyticsScreen: React.FC = () => {
           style={[
             styles.metricCard,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
@@ -90,12 +95,12 @@ export const HabitAnalyticsScreen: React.FC = () => {
               <Text
                 style={[
                   styles.metricValue,
-                  { color: colors.primary, fontFamily },
+                  { color: colors.primary, ...typography.displaySmall, fontFamily },
                 ]}
               >
                 {consistencyPercent}%
               </Text>
-              <Text style={[styles.metricLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.metricLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
                 Consistency
               </Text>
             </View>
@@ -106,12 +111,12 @@ export const HabitAnalyticsScreen: React.FC = () => {
               <Text
                 style={[
                   styles.metricValue,
-                  { color: colors.onSurface, fontFamily },
+                  { color: colors.onSurface, ...typography.displaySmall, fontFamily },
                 ]}
               >
                 {startedDaysAgo}
               </Text>
-              <Text style={[styles.metricLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.metricLabel, { color: colors.onSurfaceVariant, ...typography.labelMedium, fontFamily }]}>
                 Days Ago Started
               </Text>
             </View>
@@ -124,19 +129,20 @@ export const HabitAnalyticsScreen: React.FC = () => {
             style={[
               styles.streakCard,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.outlineVariant,
+                backgroundColor: colors.surfaceContainerLow,
+                borderRadius: shapes.large,
+                elevation: elevation.level1,
               },
             ]}
           >
             <View style={styles.streakHeader}>
               <MaterialCommunityIcons name="fire" size={24} color="#F97316" />
-              <Text style={[styles.streakTitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.streakTitle, { color: colors.onSurfaceVariant, ...typography.labelSmall, fontFamily }]}>
                 Current
               </Text>
             </View>
-            <Text style={[styles.streakDays, { color: colors.onSurface, fontFamily }]}>
-              {currentStreak} <Text style={styles.daysUnit}>days</Text>
+            <Text style={[styles.streakDays, { color: colors.onSurface, ...typography.headlineMedium, fontFamily }]}>
+              {currentStreak} <Text style={[styles.daysUnit, { ...typography.bodyMedium }]}>days</Text>
             </Text>
           </View>
 
@@ -144,19 +150,20 @@ export const HabitAnalyticsScreen: React.FC = () => {
             style={[
               styles.streakCard,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.outlineVariant,
+                backgroundColor: colors.surfaceContainerLow,
+                borderRadius: shapes.large,
+                elevation: elevation.level1,
               },
             ]}
           >
             <View style={styles.streakHeader}>
               <MaterialCommunityIcons name="trophy-outline" size={24} color="#F59E0B" />
-              <Text style={[styles.streakTitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+              <Text style={[styles.streakTitle, { color: colors.onSurfaceVariant, ...typography.labelSmall, fontFamily }]}>
                 Best
               </Text>
             </View>
-            <Text style={[styles.streakDays, { color: colors.onSurface, fontFamily }]}>
-              {bestStreak} <Text style={styles.daysUnit}>days</Text>
+            <Text style={[styles.streakDays, { color: colors.onSurface, ...typography.headlineMedium, fontFamily }]}>
+              {bestStreak} <Text style={[styles.daysUnit, { ...typography.bodyMedium }]}>days</Text>
             </Text>
           </View>
         </View>
@@ -166,15 +173,16 @@ export const HabitAnalyticsScreen: React.FC = () => {
           style={[
             styles.chartCard,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.onSurface, fontFamily }]}>
+          <Text style={[styles.sectionTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
             Activity Heatmap
           </Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
+          <Text style={[styles.sectionSubtitle, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
             Past 52 weeks of consistency
           </Text>
           <HeatMap
@@ -224,7 +232,6 @@ const styles = StyleSheet.create({
   metricCard: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
   },
@@ -260,7 +267,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 20,
     padding: 18,
-    borderWidth: 1,
     elevation: 1,
   },
   streakHeader: {
@@ -285,7 +291,6 @@ const styles = StyleSheet.create({
   chartCard: {
     borderRadius: 22,
     padding: 20,
-    borderWidth: 1,
     marginBottom: 16,
     elevation: 1,
   },

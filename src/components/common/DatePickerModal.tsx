@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { KeyboardAwareDialog } from './KeyboardAwareModal';
 
 interface DatePickerModalProps {
   visible: boolean;
@@ -16,7 +17,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const { colors, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, fontFamily } = useTheme();
 
   const [currentYear, setCurrentYear] = useState<number>(initialDate.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(initialDate.getMonth()); // 0-11
@@ -79,115 +80,98 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
     setSelectedDate(new Date(currentYear, currentMonth, day));
   };
 
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.overlay}>
-        <View
-          style={[
-            styles.dialog,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
-            },
-          ]}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.onSurface, fontFamily }]}>
-              {monthNames[currentMonth]} {currentYear}
-            </Text>
-            <View style={styles.navRow}>
-              <TouchableOpacity style={styles.navBtn} onPress={handlePrevMonth}>
-                <MaterialCommunityIcons name="chevron-left" size={24} color={colors.onSurface} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.navBtn} onPress={handleNextMonth}>
-                <MaterialCommunityIcons name="chevron-right" size={24} color={colors.onSurface} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Day of Week Headers */}
-          <View style={styles.weekHeader}>
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((dow, idx) => (
-              <Text
-                key={idx}
-                style={[styles.weekHeaderText, { color: colors.onSurfaceVariant, fontFamily }]}
-              >
-                {dow}
-              </Text>
-            ))}
-          </View>
-
-          {/* Calendar Grid */}
-          <View style={styles.grid}>
-            {daysMatrix.map((day, idx) => {
-              if (!day) {
-                return <View key={`empty-${idx}`} style={styles.dayCell} />;
-              }
-              const active = isSelected(day);
-              return (
-                <TouchableOpacity
-                  key={`day-${day}`}
-                  style={[
-                    styles.dayCell,
-                    active && [styles.selectedDayCell, { backgroundColor: colors.primary }],
-                  ]}
-                  onPress={() => handleDayPress(day)}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.dayText,
-                      {
-                        color: active ? colors.onPrimary : colors.onSurface,
-                        fontWeight: active ? '700' : '400',
-                        fontFamily,
-                      },
-                    ]}
-                  >
-                    {day}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Actions */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.btn} onPress={onCancel}>
-              <Text style={[styles.btnText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btn, styles.confirmBtn, { backgroundColor: colors.primary }]}
-              onPress={() => onConfirm(selectedDate)}
-            >
-              <Text style={[styles.btnText, { color: colors.onPrimary, fontFamily }]}>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+  const headerContent = (
+    <View style={styles.header}>
+      <Text style={[styles.title, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
+        {monthNames[currentMonth]} {currentYear}
+      </Text>
+      <View style={styles.navRow}>
+        <TouchableOpacity style={styles.navBtn} onPress={handlePrevMonth} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="chevron-left" size={24} color={colors.onSurface} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navBtn} onPress={handleNextMonth} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={colors.onSurface} />
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </View>
+  );
+
+  const footerContent = (
+    <View style={styles.actions}>
+      <TouchableOpacity style={styles.btn} onPress={onCancel} activeOpacity={0.7}>
+        <Text style={[styles.btnText, { color: colors.primary, ...typography.labelLarge, fontFamily }]}>
+          Cancel
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.btn, styles.confirmBtn, { backgroundColor: colors.primary, borderRadius: shapes.full }]}
+        onPress={() => onConfirm(selectedDate)}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.btnText, { color: colors.onPrimary, ...typography.labelLarge, fontFamily }]}>OK</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <KeyboardAwareDialog
+      visible={visible}
+      onRequestClose={onCancel}
+      header={headerContent}
+      footer={footerContent}
+      maxWidth={340}
+    >
+      {/* Day of Week Headers */}
+      <View style={styles.weekHeader}>
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((dow, idx) => (
+          <Text
+            key={idx}
+            style={[styles.weekHeaderText, { color: colors.onSurfaceVariant, ...typography.bodySmall, fontFamily }]}
+          >
+            {dow}
+          </Text>
+        ))}
+      </View>
+
+      {/* Calendar Grid */}
+      <View style={styles.grid}>
+        {daysMatrix.map((day, idx) => {
+          if (!day) {
+            return <View key={`empty-${idx}`} style={styles.dayCell} />;
+          }
+          const active = isSelected(day);
+          return (
+            <TouchableOpacity
+              key={`day-${day}`}
+              style={[
+                styles.dayCell,
+                active && [styles.selectedDayCell, { backgroundColor: colors.primary }],
+              ]}
+              onPress={() => handleDayPress(day)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.dayText,
+                  {
+                    color: active ? colors.onPrimary : colors.onSurface,
+                    ...typography.bodyMedium,
+                    fontWeight: active ? '700' : '400',
+                    fontFamily,
+                  },
+                ]}
+              >
+                {day}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </KeyboardAwareDialog>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  dialog: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    elevation: 8,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

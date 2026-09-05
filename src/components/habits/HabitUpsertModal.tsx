@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Switch,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Habit, DayOfWeek, ALL_DAYS_OF_WEEK, SHORT_DAY_NAMES } from '../../types';
 import { useTheme } from '../../theme/ThemeContext';
+import { FilterChip, AssistChip, FilledButton, TextButton, M3Switch } from '../m3';
 import { TimePickerModal } from '../common/TimePickerModal';
+import { KeyboardAwareBottomSheet } from '../common/KeyboardAwareModal';
 
 interface HabitUpsertModalProps {
   visible: boolean;
@@ -26,9 +24,14 @@ interface HabitUpsertModalProps {
     days: DayOfWeek[];
     time: number;
     reminder: boolean;
-  }) => void;
+  }) => void | Promise<void>;
   onDelete?: (habitId: number) => void;
   onClose: () => void;
+}
+
+function getCurrentPhoneMinutes(): number {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
 }
 
 export const HabitUpsertModal: React.FC<HabitUpsertModalProps> = ({
@@ -38,17 +41,26 @@ export const HabitUpsertModal: React.FC<HabitUpsertModalProps> = ({
   onDelete,
   onClose,
 }) => {
-  const { colors, appSettings, fontFamily } = useTheme();
+  const { colors, appSettings, fontFamily, shapes, typography } = useTheme();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDays, setSelectedDays] = useState<Set<DayOfWeek>>(new Set(ALL_DAYS_OF_WEEK));
-  const [reminderMinutes, setReminderMinutes] = useState<number>(540); // 9:00 AM
+  const [reminderMinutes, setReminderMinutes] = useState<number>(getCurrentPhoneMinutes());
   const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  const inputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
+
   useEffect(() => {
+    setIsSaving(false);
     if (habitToEdit) {
       setTitle(habitToEdit.title);
       setDescription(habitToEdit.description);
@@ -59,8 +71,19 @@ export const HabitUpsertModal: React.FC<HabitUpsertModalProps> = ({
       setTitle('');
       setDescription('');
       setSelectedDays(new Set(ALL_DAYS_OF_WEEK));
-      setReminderMinutes(540);
+      setReminderMinutes(getCurrentPhoneMinutes());
       setReminderEnabled(true);
+    }
+
+    if (visible) {
+      const t1 = setTimeout(focusInput, 80);
+      const t2 = setTimeout(focusInput, 200);
+      const t3 = setTimeout(focusInput, 350);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
     }
   }, [habitToEdit, visible]);
 
@@ -86,278 +109,250 @@ export const HabitUpsertModal: React.FC<HabitUpsertModalProps> = ({
     );
   };
 
-  const handleSave = () => {
-    if (!title.trim()) return;
-
-    onSave({
-      id: habitToEdit?.id,
-      title: title.trim(),
-      description: description.trim(),
-      days: Array.from(selectedDays),
-      time: reminderMinutes,
-      reminder: reminderEnabled,
-    });
-    onClose();
-  };
-
-  const formatTime = (minutes: number): string => {
-    const h24 = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (appSettings.is24Hr) {
-      return `${h24.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-    } else {
-      const p = h24 >= 12 ? 'PM' : 'AM';
-      const h12 = h24 % 12 || 12;
-      return `${h12}:${m.toString().padStart(2, '0')} ${p}`;
+  const handleSave = async () => {
+    if (!title.trim() || isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave({
+        id: habitToEdit?.id,
+        title: title.trim(),
+        description: description.trim(),
+        days: Array.from(selectedDays),
+        time: reminderMinutes,
+        reminder: reminderEnabled,
+      });
+      onClose();
+    } catch (err) {
+      console.error('Failed to save habit:', err);
+      onClose();
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const formatTimeDisplay = (totalMins: number): string => {
+    const hours = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    if (appSettings.is24Hr) {
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${mins.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const headerContent = (
+    <View style={styles.header}>
+      <Text style={[styles.sheetTitle, { color: colors.onSurface, fontFamily }]}>
+        {habitToEdit ? 'Edit Habit' : 'New Habit'}
+      </Text>
+
+      <View style={styles.headerRightActions}>
+        {/* Keyboard Button to force focus */}
+        <TouchableOpacity
+          style={[styles.keyboardBtn, { backgroundColor: colors.surfaceContainerHighest }]}
+          onPress={focusInput}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="keyboard-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+
+        {habitToEdit && onDelete && (
+          <TouchableOpacity
+            onPress={() => {
+              onDelete(habitToEdit.id);
+              onClose();
+            }}
+            style={styles.deleteButton}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" size={22} color={colors.error} />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+
+  const footerContent = (
+    <View style={styles.pinnedActionsRow}>
+      <TextButton
+        label="Cancel"
+        onPress={onClose}
+        style={{ flex: 1, marginRight: 8 }}
+      />
+      <FilledButton
+        label="Save"
+        disabled={!title.trim() || isSaving}
+        loading={isSaving}
+        onPress={handleSave}
+        style={{ flex: 1, marginLeft: 8 }}
+      />
+    </View>
+  );
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
+    <>
+      <KeyboardAwareBottomSheet
+        visible={visible}
+        onRequestClose={onClose}
+        header={headerContent}
+        footer={footerContent}
+        scrollRef={scrollRef}
+        onShow={() => {
+          focusInput();
+          setTimeout(focusInput, 150);
+          setTimeout(focusInput, 300);
+        }}
       >
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
-        <View
+        {/* Title Input */}
+        <TextInput
+          ref={inputRef}
           style={[
-            styles.sheet,
+            styles.input,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerHighest,
+              color: colors.onSurface,
+              fontFamily,
             },
           ]}
-        >
-          <View style={[styles.dragHandle, { backgroundColor: colors.outlineVariant }]} />
+          placeholder="Habit name (e.g., Read 20 mins)"
+          placeholderTextColor={colors.onSurfaceVariant}
+          value={title}
+          onChangeText={setTitle}
+          autoFocus
+          showSoftInputOnFocus={true}
+          onFocus={() => {
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+        />
 
-          <View style={styles.header}>
-            <Text style={[styles.sheetTitle, { color: colors.onSurface, fontFamily }]}>
-              {habitToEdit ? 'Edit Habit' : 'New Habit'}
-            </Text>
-            {habitToEdit && onDelete && (
-              <TouchableOpacity
-                onPress={() => {
-                  onDelete(habitToEdit.id);
-                  onClose();
-                }}
-                style={styles.deleteButton}
-              >
-                <MaterialCommunityIcons name="trash-can-outline" size={22} color={colors.error} />
-              </TouchableOpacity>
-            )}
+        {/* Description Input */}
+        <TextInput
+          style={[
+            styles.input,
+            styles.descInput,
+            {
+              backgroundColor: colors.surfaceContainerHighest,
+              color: colors.onSurface,
+              fontFamily,
+            },
+          ]}
+          placeholder="Description or motivation (optional)"
+          placeholderTextColor={colors.onSurfaceVariant}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          showSoftInputOnFocus={true}
+          onFocus={() => {
+            setTimeout(() => {
+              scrollRef.current?.scrollTo({ y: 80, animated: true });
+            }, 100);
+          }}
+        />
+
+        {/* Schedule Section */}
+        <View style={styles.scheduleHeader}>
+          <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+            Frequency
+          </Text>
+          <View style={styles.presetButtons}>
+            <AssistChip
+              label="All Days"
+              onPress={selectEveryDay}
+              style={{ marginRight: 8 }}
+            />
+            <AssistChip
+              label="Weekdays"
+              onPress={selectWeekdays}
+            />
           </View>
+        </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
-            {/* Title */}
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.onSurface,
-                  fontFamily,
-                },
-              ]}
-              placeholder="Habit Title (e.g. Read 30 mins, Exercise)"
-              placeholderTextColor={colors.onSurfaceVariant}
-              value={title}
-              onChangeText={setTitle}
-            />
-
-            {/* Description */}
-            <TextInput
-              style={[
-                styles.input,
-                styles.descInput,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.onSurface,
-                  fontFamily,
-                },
-              ]}
-              placeholder="Description or motivation (optional)"
-              placeholderTextColor={colors.onSurfaceVariant}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-            />
-
-            {/* Frequency / Weekdays */}
-            <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
-                Days of Week
-              </Text>
-              <View style={styles.presetRow}>
-                <TouchableOpacity onPress={selectEveryDay} style={styles.presetLink}>
-                  <Text style={[styles.presetLinkText, { color: colors.primary, fontFamily }]}>
-                    All
-                  </Text>
-                </TouchableOpacity>
-                <Text style={{ color: colors.outline }}>•</Text>
-                <TouchableOpacity onPress={selectWeekdays} style={styles.presetLink}>
-                  <Text style={[styles.presetLinkText, { color: colors.primary, fontFamily }]}>
-                    Weekdays
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.daysGrid}>
-              {ALL_DAYS_OF_WEEK.map((day) => {
-                const isSelected = selectedDays.has(day);
-                return (
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.dayChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceVariant,
-                      },
-                    ]}
-                    onPress={() => toggleDay(day)}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[
-                        styles.dayChipText,
-                        {
-                          color: isSelected ? colors.onPrimary : colors.onSurfaceVariant,
-                          fontWeight: isSelected ? '700' : '500',
-                          fontFamily,
-                        },
-                      ]}
-                    >
-                      {SHORT_DAY_NAMES[day]}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Reminder & Time */}
-            <View
-              style={[
-                styles.reminderCard,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  borderColor: colors.outlineVariant,
-                },
-              ]}
-            >
-              <View style={styles.switchRow}>
-                <View style={styles.switchLabelCol}>
-                  <Text style={[styles.reminderTitle, { color: colors.onSurface, fontFamily }]}>
-                    Daily Reminder
-                  </Text>
-                  <Text
-                    style={[
-                      styles.reminderSubtitle,
-                      { color: colors.onSurfaceVariant, fontFamily },
-                    ]}
-                  >
-                    Get notified at {formatTime(reminderMinutes)}
-                  </Text>
-                </View>
-                <Switch
-                  value={reminderEnabled}
-                  onValueChange={setReminderEnabled}
-                  trackColor={{ false: colors.outline, true: colors.primary }}
-                  thumbColor={colors.surface}
-                />
-              </View>
-
-              {reminderEnabled && (
-                <TouchableOpacity
-                  style={[styles.timePickerTrigger, { backgroundColor: colors.surface }]}
-                  onPress={() => setShowTimePicker(true)}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="clock-outline" size={20} color={colors.primary} />
-                  <Text style={[styles.timeDisplayText, { color: colors.onSurface, fontFamily }]}>
-                    {formatTime(reminderMinutes)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color={colors.onSurfaceVariant}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.actionsRow}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-                <Text style={[styles.actionBtnText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+        {/* Day Selector Pills */}
+        <View style={styles.daysRow}>
+          {ALL_DAYS_OF_WEEK.map((day) => {
+            const isSelected = selectedDays.has(day);
+            return (
               <TouchableOpacity
+                key={day}
                 style={[
-                  styles.saveBtn,
+                  styles.dayPill,
                   {
-                    backgroundColor: title.trim() ? colors.primary : colors.surfaceVariant,
+                    backgroundColor: isSelected ? colors.primary : colors.surfaceContainerHighest,
                   },
                 ]}
-                disabled={!title.trim()}
-                onPress={handleSave}
+                onPress={() => toggleDay(day)}
+                activeOpacity={0.7}
               >
                 <Text
                   style={[
-                    styles.actionBtnText,
+                    styles.dayPillText,
                     {
-                      color: title.trim() ? colors.onPrimary : colors.onSurfaceVariant,
+                      color: isSelected ? colors.onPrimary : colors.onSurfaceVariant,
+                      fontWeight: isSelected ? '700' : '500',
                       fontFamily,
                     },
                   ]}
                 >
-                  Save
+                  {SHORT_DAY_NAMES[day]}
                 </Text>
               </TouchableOpacity>
-            </View>
-          </ScrollView>
+            );
+          })}
         </View>
 
-        <TimePickerModal
-          visible={showTimePicker}
-          initialMinutes={reminderMinutes}
-          is24Hr={appSettings.is24Hr}
-          onConfirm={(mins) => {
-            setReminderMinutes(mins);
-            setShowTimePicker(false);
-          }}
-          onCancel={() => setShowTimePicker(false)}
-        />
-      </KeyboardAvoidingView>
-    </Modal>
+        {/* Reminder Section */}
+        <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+          Daily Reminder
+        </Text>
+
+        <View style={[styles.reminderCard, { backgroundColor: colors.surfaceContainer }]}>
+          <View style={styles.reminderToggleRow}>
+            <View style={styles.reminderLabelCol}>
+              <Text style={[styles.reminderTitle, { color: colors.onSurface, fontFamily }]}>
+                Enable Reminder
+              </Text>
+              <Text style={[styles.reminderSub, { color: colors.onSurfaceVariant, fontFamily }]}>
+                Get notified on scheduled days
+              </Text>
+            </View>
+            <M3Switch
+              value={reminderEnabled}
+              onValueChange={setReminderEnabled}
+            />
+          </View>
+
+          {reminderEnabled && (
+            <TouchableOpacity
+              style={[styles.timePickerButton, { backgroundColor: colors.surfaceContainerHigh }]}
+              onPress={() => setShowTimePicker(true)}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="clock-outline" size={20} color={colors.primary} />
+              <Text style={[styles.timeDisplayText, { color: colors.onSurface, fontFamily }]}>
+                {formatTimeDisplay(reminderMinutes)}
+              </Text>
+              <MaterialCommunityIcons name="pencil" size={18} color={colors.onSurfaceVariant} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </KeyboardAwareBottomSheet>
+
+      <TimePickerModal
+        visible={showTimePicker}
+        initialMinutes={reminderMinutes}
+        is24Hr={appSettings.is24Hr}
+        onConfirm={(mins) => {
+          setReminderMinutes(mins);
+          setShowTimePicker(false);
+        }}
+        onCancel={() => setShowTimePicker(false)}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  sheet: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
-    maxHeight: '90%',
-    borderWidth: 1,
-  },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,25 +363,40 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
   },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  keyboardBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   deleteButton: {
     padding: 6,
   },
-  body: {
-    paddingBottom: 20,
+  scrollArea: {
+    maxHeight: 380,
+  },
+  scrollContent: {
+    paddingBottom: 16,
   },
   input: {
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
     marginBottom: 12,
   },
   descInput: {
-    minHeight: 64,
+    minHeight: 60,
     textAlignVertical: 'top',
     marginBottom: 20,
   },
-  sectionHeaderRow: {
+  scheduleHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -398,77 +408,74 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  presetRow: {
+  presetButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
-  presetLink: {
-    paddingVertical: 2,
+  presetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  presetLinkText: {
-    fontSize: 13,
-    fontWeight: '700',
+  presetChipText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
-  daysGrid: {
+  daysRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-  dayChip: {
-    flex: 1,
-    marginHorizontal: 2,
-    paddingVertical: 10,
-    borderRadius: 14,
+  dayPill: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayChipText: {
-    fontSize: 12,
+  dayPillText: {
+    fontSize: 13,
   },
   reminderCard: {
     borderRadius: 18,
     padding: 16,
-    borderWidth: 1,
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  switchRow: {
+  reminderToggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  switchLabelCol: {
+  reminderLabelCol: {
     flex: 1,
-    marginRight: 16,
   },
   reminderTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
-  reminderSubtitle: {
-    fontSize: 13,
+  reminderSub: {
+    fontSize: 12,
     marginTop: 2,
   },
-  timePickerTrigger: {
+  timePickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 12,
     borderRadius: 14,
-    marginTop: 14,
+    marginTop: 12,
+    gap: 10,
   },
   timeDisplayText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginLeft: 12,
   },
-  actionsRow: {
+  pinnedActionsRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 12,
+    paddingTop: 12,
   },
   cancelBtn: {
     paddingHorizontal: 20,

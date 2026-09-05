@@ -34,7 +34,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   canMoveUp = false,
   canMoveDown = false,
 }) => {
-  const { colors, appSettings, fontFamily } = useTheme();
+  const { colors, appSettings, fontFamily, shapes, elevation, typography } = useTheme();
   const today = getTodayEpochDay();
   const isTodayCompleted = completedEpochDays.has(today);
   const todayDow = epochDayToDayOfWeek(today);
@@ -50,8 +50,9 @@ export const HabitCard: React.FC<HabitCardProps> = ({
       style={[
         styles.card,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.outlineVariant,
+          backgroundColor: colors.surfaceContainerLow,
+          borderRadius: shapes.large,
+          elevation: elevation.level1,
         },
       ]}
     >
@@ -177,8 +178,11 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   cardHeader: {
     flexDirection: 'row',

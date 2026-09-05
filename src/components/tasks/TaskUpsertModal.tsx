@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Task, Category } from '../../types';
 import { useTheme } from '../../theme/ThemeContext';
+import { FilterChip, AssistChip, FilledButton, TextButton } from '../m3';
 import { TimePickerModal } from '../common/TimePickerModal';
 import { DatePickerModal } from '../common/DatePickerModal';
+import { KeyboardAwareBottomSheet } from '../common/KeyboardAwareModal';
 
 interface TaskUpsertModalProps {
   visible: boolean;
@@ -41,7 +40,7 @@ export const TaskUpsertModal: React.FC<TaskUpsertModalProps> = ({
   onDelete,
   onClose,
 }) => {
-  const { colors, appSettings, fontFamily } = useTheme();
+  const { colors, appSettings, fontFamily, shapes, typography } = useTheme();
 
   const [title, setTitle] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1);
@@ -49,7 +48,13 @@ export const TaskUpsertModal: React.FC<TaskUpsertModalProps> = ({
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const inputRef = React.useRef<TextInput>(null);
+
+  const inputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
 
   useEffect(() => {
     if (taskToEdit) {
@@ -65,10 +70,14 @@ export const TaskUpsertModal: React.FC<TaskUpsertModalProps> = ({
     }
 
     if (visible) {
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 80);
-      return () => clearTimeout(timer);
+      const t1 = setTimeout(focusInput, 80);
+      const t2 = setTimeout(focusInput, 200);
+      const t3 = setTimeout(focusInput, 350);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
     }
   }, [taskToEdit, defaultCategoryId, categories, visible]);
 
@@ -139,293 +148,210 @@ export const TaskUpsertModal: React.FC<TaskUpsertModalProps> = ({
     return `${dateStr} at ${timeStr}`;
   };
 
+  const headerContent = (
+    <View style={styles.header}>
+      <Text style={[styles.sheetTitle, { color: colors.onSurface, fontFamily }]}>
+        {taskToEdit ? 'Edit Task' : 'New Task'}
+      </Text>
+
+      <View style={styles.headerRightActions}>
+        {/* Keyboard Button to force select & open keyboard */}
+        <TouchableOpacity
+          style={[styles.keyboardBtn, { backgroundColor: colors.surfaceContainerHighest }]}
+          onPress={focusInput}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="keyboard-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+
+        {taskToEdit && onDelete && (
+          <TouchableOpacity
+            onPress={() => {
+              onDelete(taskToEdit.id);
+              onClose();
+            }}
+            style={styles.deleteButton}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" size={22} color={colors.error} />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+
+  const footerContent = (
+    <View style={styles.pinnedActionsRow}>
+      <TextButton
+        label="Cancel"
+        onPress={onClose}
+        style={{ flex: 1, marginRight: 8 }}
+      />
+      <FilledButton
+        label="Save"
+        disabled={!title.trim()}
+        onPress={handleSave}
+        style={{ flex: 1, marginLeft: 8 }}
+      />
+    </View>
+  );
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
-      onShow={() => {
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 50);
-      }}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
+    <>
+      <KeyboardAwareBottomSheet
+        visible={visible}
+        onRequestClose={onClose}
+        header={headerContent}
+        footer={footerContent}
+        scrollRef={scrollRef}
+        onShow={() => {
+          focusInput();
+          setTimeout(focusInput, 150);
+          setTimeout(focusInput, 300);
+        }}
       >
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
-        <View
+        {/* Title Input */}
+        <TextInput
+          ref={inputRef}
           style={[
-            styles.sheet,
+            styles.input,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerHighest,
+              color: colors.onSurface,
+              fontFamily,
             },
           ]}
-        >
-          {/* Handle */}
-          <View style={[styles.dragHandle, { backgroundColor: colors.outlineVariant }]} />
+          placeholder="What do you need to do?"
+          placeholderTextColor={colors.onSurfaceVariant}
+          value={title}
+          onChangeText={setTitle}
+          autoFocus
+          showSoftInputOnFocus={true}
+          multiline
+          onFocus={() => {
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+        />
 
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.sheetTitle, { color: colors.onSurface, fontFamily }]}>
-              {taskToEdit ? 'Edit Task' : 'New Task'}
-            </Text>
-            {taskToEdit && onDelete && (
-              <TouchableOpacity
-                onPress={() => {
-                  onDelete(taskToEdit.id);
-                  onClose();
-                }}
-                style={styles.deleteButton}
-              >
-                <MaterialCommunityIcons name="trash-can-outline" size={22} color={colors.error} />
-              </TouchableOpacity>
-            )}
-          </View>
+        {/* Category Selector */}
+        <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+          Category
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
+          {categories.map((cat) => {
+            const isSelected = selectedCategoryId === cat.id;
+            return (
+              <FilterChip
+                key={cat.id}
+                label={cat.name}
+                selected={isSelected}
+                customColor={cat.color}
+                onPress={() => setSelectedCategoryId(cat.id)}
+                style={{ marginRight: 8 }}
+              />
+            );
+          })}
+        </ScrollView>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
-            {/* Title Input */}
-            <TextInput
-              ref={inputRef}
+        {/* Reminder Section */}
+        <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
+          Reminder
+        </Text>
+
+        <View style={[styles.reminderCard, { backgroundColor: colors.surfaceContainer }]}>
+          <View style={styles.reminderInfoRow}>
+            <MaterialCommunityIcons
+              name="bell-outline"
+              size={20}
+              color={reminderTimestamp ? colors.primary : colors.onSurfaceVariant}
+            />
+            <Text
               style={[
-                styles.input,
+                styles.reminderDisplay,
                 {
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.onSurface,
+                  color: reminderTimestamp ? colors.primary : colors.onSurfaceVariant,
+                  fontWeight: reminderTimestamp ? '700' : '500',
                   fontFamily,
                 },
               ]}
-              placeholder="What do you need to do?"
-              placeholderTextColor={colors.onSurfaceVariant}
-              value={title}
-              onChangeText={setTitle}
-              autoFocus
-              multiline
-            />
-
-            {/* Category Selector */}
-            <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
-              Category
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
-              {categories.map((cat) => {
-                const isSelected = selectedCategoryId === cat.id;
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[
-                      styles.categoryChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceVariant,
-                      },
-                    ]}
-                    onPress={() => setSelectedCategoryId(cat.id)}
-                    activeOpacity={0.8}
-                  >
-                    <View
-                      style={[
-                        styles.catDot,
-                        { backgroundColor: cat.color || colors.primary },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.catName,
-                        {
-                          color: isSelected ? colors.onPrimary : colors.onSurfaceVariant,
-                          fontWeight: isSelected ? '700' : '500',
-                          fontFamily,
-                        },
-                      ]}
-                    >
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* Reminder Section */}
-            <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant, fontFamily }]}>
-              Reminder
-            </Text>
-
-            <View
-              style={[
-                styles.reminderCard,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  borderColor: colors.outlineVariant,
-                },
-              ]}
             >
-              <View style={styles.reminderInfoRow}>
-                <MaterialCommunityIcons
-                  name="bell-outline"
-                  size={20}
-                  color={reminderTimestamp ? colors.primary : colors.onSurfaceVariant}
-                />
-                <Text
-                  style={[
-                    styles.reminderDisplay,
-                    {
-                      color: reminderTimestamp ? colors.primary : colors.onSurfaceVariant,
-                      fontWeight: reminderTimestamp ? '700' : '500',
-                      fontFamily,
-                    },
-                  ]}
-                >
-                  {formatReminderDisplay(reminderTimestamp)}
-                </Text>
-                {reminderTimestamp ? (
-                  <TouchableOpacity
-                    onPress={() => setReminderTimestamp(null)}
-                    style={styles.clearBtn}
-                  >
-                    <MaterialCommunityIcons name="close" size={18} color={colors.onSurfaceVariant} />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-
-              {/* Date / Time Pickers */}
-              <View style={styles.pickerButtonsRow}>
-                <TouchableOpacity
-                  style={[styles.pickerBtn, { backgroundColor: colors.surface }]}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <MaterialCommunityIcons name="calendar" size={16} color={colors.onSurface} />
-                  <Text style={[styles.pickerBtnText, { color: colors.onSurface, fontFamily }]}>
-                    Date
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.pickerBtn, { backgroundColor: colors.surface }]}
-                  onPress={() => setShowTimePicker(true)}
-                >
-                  <MaterialCommunityIcons name="clock-outline" size={16} color={colors.onSurface} />
-                  <Text style={[styles.pickerBtnText, { color: colors.onSurface, fontFamily }]}>
-                    Time
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Quick Preset Buttons */}
-              <View style={styles.quickPresetsRow}>
-                <TouchableOpacity
-                  style={[styles.presetChip, { backgroundColor: colors.surface }]}
-                  onPress={() => handleQuickReminder('tomorrow_morning')}
-                >
-                  <Text style={[styles.presetText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                    Tomorrow 9 AM
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.presetChip, { backgroundColor: colors.surface }]}
-                  onPress={() => handleQuickReminder('tomorrow_evening')}
-                >
-                  <Text style={[styles.presetText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                    Tomorrow 6 PM
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.presetChip, { backgroundColor: colors.surface }]}
-                  onPress={() => handleQuickReminder('next_week')}
-                >
-                  <Text style={[styles.presetText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                    Next Week
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.actionsRow}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-                <Text style={[styles.actionBtnText, { color: colors.onSurfaceVariant, fontFamily }]}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+              {formatReminderDisplay(reminderTimestamp)}
+            </Text>
+            {reminderTimestamp ? (
               <TouchableOpacity
-                style={[
-                  styles.saveBtn,
-                  {
-                    backgroundColor: title.trim() ? colors.primary : colors.surfaceVariant,
-                  },
-                ]}
-                disabled={!title.trim()}
-                onPress={handleSave}
+                onPress={() => setReminderTimestamp(null)}
+                style={styles.clearBtn}
               >
-                <Text
-                  style={[
-                    styles.actionBtnText,
-                    {
-                      color: title.trim() ? colors.onPrimary : colors.onSurfaceVariant,
-                      fontFamily,
-                    },
-                  ]}
-                >
-                  Save
-                </Text>
+                <MaterialCommunityIcons name="close" size={18} color={colors.onSurfaceVariant} />
               </TouchableOpacity>
-            </View>
-          </ScrollView>
+            ) : null}
+          </View>
+
+          {/* Date / Time Pickers */}
+          <View style={styles.pickerButtonsRow}>
+            <TouchableOpacity
+              style={[styles.pickerBtn, { backgroundColor: colors.surfaceContainerHigh }]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <MaterialCommunityIcons name="calendar" size={16} color={colors.onSurface} />
+              <Text style={[styles.pickerBtnText, { color: colors.onSurface, fontFamily }]}>
+                Date
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.pickerBtn, { backgroundColor: colors.surfaceContainerHigh }]}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <MaterialCommunityIcons name="clock-outline" size={16} color={colors.onSurface} />
+              <Text style={[styles.pickerBtnText, { color: colors.onSurface, fontFamily }]}>
+                Time
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Quick Preset Buttons */}
+          <View style={styles.quickPresetsRow}>
+            <AssistChip
+              label="Tomorrow 9 AM"
+              onPress={() => handleQuickReminder('tomorrow_morning')}
+            />
+            <AssistChip
+              label="Tomorrow 6 PM"
+              onPress={() => handleQuickReminder('tomorrow_evening')}
+            />
+            <AssistChip
+              label="Next Week"
+              onPress={() => handleQuickReminder('next_week')}
+            />
+          </View>
         </View>
+      </KeyboardAwareBottomSheet>
 
-        <DatePickerModal
-          visible={showDatePicker}
-          initialDate={reminderTimestamp ? new Date(reminderTimestamp) : new Date()}
-          onConfirm={handleDateConfirm}
-          onCancel={() => setShowDatePicker(false)}
-        />
+      <DatePickerModal
+        visible={showDatePicker}
+        initialDate={reminderTimestamp ? new Date(reminderTimestamp) : new Date()}
+        onConfirm={handleDateConfirm}
+        onCancel={() => setShowDatePicker(false)}
+      />
 
-        <TimePickerModal
-          visible={showTimePicker}
-          is24Hr={appSettings.is24Hr}
-          initialMinutes={
-            reminderTimestamp
-              ? new Date(reminderTimestamp).getHours() * 60 +
-                new Date(reminderTimestamp).getMinutes()
-              : 540
-          }
-          onConfirm={handleTimeConfirm}
-          onCancel={() => setShowTimePicker(false)}
-        />
-      </KeyboardAvoidingView>
-    </Modal>
+      <TimePickerModal
+        visible={showTimePicker}
+        is24Hr={appSettings.is24Hr}
+        initialMinutes={
+          reminderTimestamp
+            ? new Date(reminderTimestamp).getHours() * 60 +
+              new Date(reminderTimestamp).getMinutes()
+            : new Date().getHours() * 60 + new Date().getMinutes()
+        }
+        onConfirm={handleTimeConfirm}
+        onCancel={() => setShowTimePicker(false)}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  sheet: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
-    maxHeight: '90%',
-    borderWidth: 1,
-  },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -436,18 +362,33 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
   },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  keyboardBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   deleteButton: {
     padding: 6,
   },
-  body: {
-    paddingBottom: 20,
+  scrollArea: {
+    maxHeight: 380,
+  },
+  scrollContent: {
+    paddingBottom: 16,
   },
   input: {
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    minHeight: 80,
+    minHeight: 70,
     textAlignVertical: 'top',
     marginBottom: 20,
   },
@@ -481,8 +422,7 @@ const styles = StyleSheet.create({
   reminderCard: {
     borderRadius: 18,
     padding: 16,
-    borderWidth: 1,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   reminderInfoRow: {
     flexDirection: 'row',
@@ -529,11 +469,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  actionsRow: {
+  pinnedActionsRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 12,
+    paddingTop: 12,
   },
   cancelBtn: {
     paddingHorizontal: 20,

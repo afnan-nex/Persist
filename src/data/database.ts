@@ -64,6 +64,29 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
     );
   }
 
+  // Safe migrations: ensure all columns exist on habit_index if upgrading an existing database
+  try {
+    const habitCols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(habit_index);');
+    const colNames = new Set(habitCols.map((c) => c.name.toLowerCase()));
+    if (!colNames.has('description')) {
+      await db.execAsync("ALTER TABLE habit_index ADD COLUMN description TEXT NOT NULL DEFAULT '';");
+    }
+    if (!colNames.has('index')) {
+      await db.execAsync("ALTER TABLE habit_index ADD COLUMN [index] INTEGER NOT NULL DEFAULT 0;");
+    }
+    if (!colNames.has('days')) {
+      await db.execAsync("ALTER TABLE habit_index ADD COLUMN days TEXT NOT NULL DEFAULT '';");
+    }
+    if (!colNames.has('time')) {
+      await db.execAsync("ALTER TABLE habit_index ADD COLUMN time INTEGER NOT NULL DEFAULT 540;");
+    }
+    if (!colNames.has('reminder')) {
+      await db.execAsync("ALTER TABLE habit_index ADD COLUMN reminder INTEGER NOT NULL DEFAULT 1;");
+    }
+  } catch (migErr) {
+    console.warn('Safe migration warning on habit_index:', migErr);
+  }
+
   databaseInstance = db;
   return db;
 }

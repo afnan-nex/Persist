@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useColorScheme as useDeviceColorScheme } from 'react-native';
 import { AppThemeSettings, AppSettings, AppFont } from '../types';
 import {
@@ -13,9 +13,20 @@ import {
 } from '../data/settingsDatastore';
 import { generateColorScheme, ColorScheme } from './colors';
 import { getSystemMonetColors } from './monet';
+import {
+  createM3Typography,
+  M3TypographyScale,
+  M3Shapes,
+  M3Elevation,
+  M3StateLayers,
+} from './tokens';
 
 interface ThemeContextType {
   colors: ColorScheme;
+  typography: M3TypographyScale;
+  shapes: typeof M3Shapes;
+  elevation: typeof M3Elevation;
+  stateLayers: typeof M3StateLayers;
   themeSettings: AppThemeSettings;
   setThemeSettings: (partial: Partial<AppThemeSettings>) => Promise<void>;
   appSettings: AppSettings;
@@ -65,13 +76,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const monetColors = themeSettings.useMaterialYou !== false ? getSystemMonetColors() : null;
 
-  const colors = generateColorScheme(
-    themeSettings.seedColor,
-    isDark,
-    isAmoled,
-    themeSettings.paletteStyle,
-    monetColors
+  const colors = useMemo(
+    () =>
+      generateColorScheme(
+        themeSettings.seedColor,
+        isDark,
+        isAmoled,
+        themeSettings.paletteStyle,
+        monetColors
+      ),
+    [themeSettings.seedColor, isDark, isAmoled, themeSettings.paletteStyle, monetColors]
   );
+
+  const fontFamily = getFontFamily(themeSettings.font);
+
+  const typography = useMemo(() => createM3Typography(fontFamily), [fontFamily]);
 
   const updateTheme = async (partial: Partial<AppThemeSettings>) => {
     const updated = await saveThemeSettings(partial);
@@ -83,12 +102,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAppSettingsState(updated);
   };
 
-  const fontFamily = getFontFamily(themeSettings.font);
-
   return (
     <ThemeContext.Provider
       value={{
         colors,
+        typography,
+        shapes: M3Shapes,
+        elevation: M3Elevation,
+        stateLayers: M3StateLayers,
         themeSettings,
         setThemeSettings: updateTheme,
         appSettings,

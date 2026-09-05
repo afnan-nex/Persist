@@ -83,6 +83,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
                       {
                         backgroundColor: cellColor,
                         borderColor: day.epochDay === today ? colors.primary : 'transparent',
+                        borderWidth: day.epochDay === today ? 1.5 : 0,
                       },
                     ]}
                     disabled={day.isFuture || !onPressDay}
@@ -134,7 +135,6 @@ const styles = StyleSheet.create({
     width: 13,
     height: 13,
     borderRadius: 3,
-    borderWidth: 1,
   },
   legendRow: {
     flexDirection: 'row',

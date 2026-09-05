@@ -5,21 +5,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppThemeMode, PaletteStyle, AppFont } from '../../types';
-import { SEED_COLOR_PRESETS } from '../../theme/colors';
+import { SEED_COLOR_PRESETS, getContrastingTextColor, getPalettePreviewColors } from '../../theme/colors';
+import { getSystemMonetColors } from '../../theme/monet';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar, M3Switch } from '../../components/m3';
 import { ColorPickerModal } from '../../components/common/ColorPickerModal';
 
 export const LookAndFeelScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { colors, themeSettings, setThemeSettings, fontFamily } = useTheme();
+  const { colors, typography, shapes, elevation, themeSettings, setThemeSettings, fontFamily } = useTheme();
+  const systemMonet = getSystemMonetColors();
+  const isMonetSupported = systemMonet?.isSupported ?? false;
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -30,13 +32,13 @@ export const LookAndFeelScreen: React.FC = () => {
     { label: 'AMOLED', mode: 'AMOLED', icon: 'circle-slice-8' },
   ];
 
-  const paletteStyles: { label: string; style: PaletteStyle }[] = [
-    { label: 'Tonal Spot', style: 'TONAL_SPOT' },
-    { label: 'Spritz', style: 'SPRITZ' },
-    { label: 'Vibrant', style: 'VIBRANT' },
-    { label: 'Expressive', style: 'EXPRESSIVE' },
-    { label: 'Rainbow', style: 'RAINBOW' },
-    { label: 'Fruit Salad', style: 'FRUIT_SALAD' },
+  const paletteStyles: { label: string; style: PaletteStyle; description: string }[] = [
+    { label: 'Tonal Spot', style: 'TONAL_SPOT', description: 'Balanced & harmonious Material You' },
+    { label: 'Spritz', style: 'SPRITZ', description: 'Soft, muted & calm pastel tones' },
+    { label: 'Vibrant', style: 'VIBRANT', description: 'Vivid, punchy & high-energy colors' },
+    { label: 'Expressive', style: 'EXPRESSIVE', description: 'Bold, artistic & contrasting accents' },
+    { label: 'Rainbow', style: 'RAINBOW', description: 'Rich spectrum of chromatic colors' },
+    { label: 'Fruit Salad', style: 'FRUIT_SALAD', description: 'Fresh, playful & tropical hues' },
   ];
 
   const fontOptions: { label: string; font: AppFont }[] = [
@@ -48,11 +50,13 @@ export const LookAndFeelScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
+      <TopAppBar
         title="Look & Feel"
-        leftAction={{
+        variant="small"
+        navigationIcon={{
           icon: 'arrow-left',
           onPress: () => navigation.goBack(),
+          accessibilityLabel: 'Go back',
         }}
       />
 
@@ -62,7 +66,7 @@ export const LookAndFeelScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* App Theme */}
-        <Text style={[styles.sectionTitle, { color: colors.primary, fontFamily }]}>
+        <Text style={[styles.sectionTitle, { color: colors.primary, ...typography.titleSmall, fontFamily }]}>
           Theme Mode
         </Text>
         <View style={styles.themeGrid}>
@@ -74,8 +78,9 @@ export const LookAndFeelScreen: React.FC = () => {
                 style={[
                   styles.themeOptionCard,
                   {
-                    backgroundColor: isSelected ? colors.primaryContainer : colors.surface,
-                    borderColor: isSelected ? colors.primary : colors.outlineVariant,
+                    backgroundColor: isSelected ? colors.secondaryContainer : colors.surfaceContainerLow,
+                    borderRadius: shapes.large,
+                    elevation: elevation.level1,
                   },
                 ]}
                 onPress={() => setThemeSettings({ themeMode: opt.mode })}
@@ -84,13 +89,14 @@ export const LookAndFeelScreen: React.FC = () => {
                 <MaterialCommunityIcons
                   name={opt.icon}
                   size={24}
-                  color={isSelected ? colors.primary : colors.onSurfaceVariant}
+                  color={isSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant}
                 />
                 <Text
                   style={[
                     styles.themeOptionLabel,
                     {
-                      color: isSelected ? colors.onPrimaryContainer : colors.onSurface,
+                      color: isSelected ? colors.onSecondaryContainer : colors.onSurface,
+                      ...typography.labelMedium,
                       fontWeight: isSelected ? '700' : '500',
                       fontFamily,
                     },
@@ -103,44 +109,78 @@ export const LookAndFeelScreen: React.FC = () => {
           })}
         </View>
 
-        {/* Pure AMOLED Black Option */}
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
-            },
-          ]}
-        >
-          <View style={styles.settingRow}>
-            <View style={styles.rowLabelCol}>
-              <Text style={[styles.rowTitle, { color: colors.onSurface, fontFamily }]}>
-                AMOLED Pure Black
-              </Text>
-              <Text style={[styles.rowSubtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
-                Deep true black #000000 background for OLED displays
-              </Text>
+
+        {/* Material You Dynamic Colors (Monet) */}
+        {isMonetSupported && (
+          <>
+            <Text style={[styles.sectionTitle, { color: colors.primary, ...typography.titleSmall, fontFamily }]}>
+              Material You
+            </Text>
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.surfaceContainerLow,
+                  borderRadius: shapes.large,
+                  elevation: elevation.level1,
+                  padding: 16,
+                },
+              ]}
+            >
+              <View style={styles.settingRowInner}>
+                <View style={styles.rowLabelCol}>
+                  <Text style={[styles.rowTitle, { color: colors.onSurface, ...typography.titleMedium, fontFamily }]}>
+                    Dynamic Wallpaper Colors
+                  </Text>
+                  <Text style={[styles.rowSubtitle, { color: colors.onSurfaceVariant, ...typography.bodyMedium, fontFamily }]}>
+                    Sync palette directly with your Android system wallpaper
+                  </Text>
+                </View>
+                <M3Switch
+                  selected={themeSettings.useMaterialYou !== false}
+                  onValueChange={(val) => setThemeSettings({ useMaterialYou: val })}
+                />
+              </View>
+
+              {themeSettings.useMaterialYou !== false && systemMonet?.primary && (
+                <View style={styles.monetActiveContainer}>
+                  <View style={styles.monetBadgeRow}>
+                    <MaterialCommunityIcons name="palette" size={16} color={colors.primary} />
+                    <Text style={[styles.monetBadgeText, { color: colors.primary, ...typography.labelMedium, fontFamily }]}>
+                      System Wallpaper Palette Active
+                    </Text>
+                  </View>
+                  <View style={styles.monetChipsRow}>
+                    <View style={[styles.monetChip, { backgroundColor: systemMonet.primary }]} />
+                    {systemMonet.secondary && (
+                      <View style={[styles.monetChip, { backgroundColor: systemMonet.secondary }]} />
+                    )}
+                    {systemMonet.tertiary && (
+                      <View style={[styles.monetChip, { backgroundColor: systemMonet.tertiary }]} />
+                    )}
+                    {systemMonet.primaryLight && (
+                      <View style={[styles.monetChip, { backgroundColor: systemMonet.primaryLight }]} />
+                    )}
+                  </View>
+                </View>
+              )}
             </View>
-            <Switch
-              value={themeSettings.amoled}
-              onValueChange={(val) => setThemeSettings({ amoled: val })}
-              trackColor={{ false: colors.outline, true: colors.primary }}
-              thumbColor={colors.surface}
-            />
-          </View>
-        </View>
+          </>
+        )}
 
         {/* Accent / Seed Color */}
-        <Text style={[styles.sectionTitle, { color: colors.primary, fontFamily }]}>
-          Accent Color
+        <Text style={[styles.sectionTitle, { color: colors.primary, ...typography.titleSmall, fontFamily }]}>
+          {isMonetSupported && themeSettings.useMaterialYou !== false
+            ? 'Custom Accent Color (Selecting overrides wallpaper)'
+            : 'Accent Color'}
         </Text>
         <View
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
               padding: 16,
             },
           ]}
@@ -148,98 +188,157 @@ export const LookAndFeelScreen: React.FC = () => {
           <View style={styles.colorsGrid}>
             {SEED_COLOR_PRESETS.map((preset) => {
               const isSelected =
+                themeSettings.useMaterialYou === false &&
                 themeSettings.seedColor.toLowerCase() === preset.color.toLowerCase();
+              const checkmarkColor = getContrastingTextColor(preset.color, '#FFFFFF', '#111318');
               return (
                 <TouchableOpacity
                   key={preset.name}
                   style={[
                     styles.colorSwatch,
                     { backgroundColor: preset.color },
-                    isSelected && styles.selectedSwatch,
+                    isSelected && [styles.selectedSwatch, { borderColor: colors.primary }],
                   ]}
-                  onPress={() => setThemeSettings({ seedColor: preset.color })}
+                  onPress={() => setThemeSettings({ seedColor: preset.color, useMaterialYou: false })}
                   activeOpacity={0.8}
                 >
                   {isSelected && (
-                    <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+                    <MaterialCommunityIcons name="check" size={20} color={checkmarkColor} />
                   )}
                 </TouchableOpacity>
               );
             })}
 
             {/* Custom Color Trigger */}
-            <TouchableOpacity
-              style={[
-                styles.colorSwatch,
-                styles.customColorSwatch,
-                { borderColor: colors.outline },
-              ]}
-              onPress={() => setShowColorPicker(true)}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="plus" size={22} color={colors.onSurface} />
-            </TouchableOpacity>
+            {(() => {
+              const isCustomSelected =
+                themeSettings.useMaterialYou === false &&
+                !SEED_COLOR_PRESETS.some(
+                  (preset) => preset.color.toLowerCase() === themeSettings.seedColor.toLowerCase()
+                );
+              const customCheckColor = getContrastingTextColor(themeSettings.seedColor, '#FFFFFF', '#111318');
+
+              return isCustomSelected ? (
+                <TouchableOpacity
+                  style={[
+                    styles.colorSwatch,
+                    styles.selectedSwatch,
+                    { backgroundColor: themeSettings.seedColor, borderColor: colors.primary },
+                  ]}
+                  onPress={() => setShowColorPicker(true)}
+                  activeOpacity={0.8}
+                >
+                  <MaterialCommunityIcons name="palette-outline" size={20} color={customCheckColor} />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.colorSwatch,
+                    styles.customColorSwatch,
+                    { borderColor: colors.outline },
+                  ]}
+                  onPress={() => setShowColorPicker(true)}
+                  activeOpacity={0.8}
+                >
+                  <MaterialCommunityIcons name="plus" size={22} color={colors.onSurface} />
+                </TouchableOpacity>
+              );
+            })()}
           </View>
         </View>
 
         {/* Palette Style */}
-        <Text style={[styles.sectionTitle, { color: colors.primary, fontFamily }]}>
+        <Text style={[styles.sectionTitle, { color: colors.primary, ...typography.titleSmall, fontFamily }]}>
           Palette Style
         </Text>
         <View
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
-          {paletteStyles.map((ps, idx) => {
-            const isSelected = themeSettings.paletteStyle === ps.style;
-            return (
-              <React.Fragment key={ps.style}>
-                {idx > 0 && (
-                  <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
-                )}
-                <TouchableOpacity
-                  style={styles.radioRow}
-                  onPress={() => setThemeSettings({ paletteStyle: ps.style })}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.radioLabel,
-                      {
-                        color: isSelected ? colors.primary : colors.onSurface,
-                        fontWeight: isSelected ? '700' : '500',
-                        fontFamily,
-                      },
-                    ]}
+          {(() => {
+            const activeSeed =
+              themeSettings.useMaterialYou !== false && systemMonet?.primary
+                ? systemMonet.primary
+                : themeSettings.seedColor;
+
+            return paletteStyles.map((ps, idx) => {
+              const isSelected = themeSettings.paletteStyle === ps.style;
+              const preview = getPalettePreviewColors(activeSeed, ps.style, colors.isDark);
+
+              return (
+                <React.Fragment key={ps.style}>
+                  {idx > 0 && (
+                    <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
+                  )}
+                  <TouchableOpacity
+                    style={styles.paletteRow}
+                    onPress={() => setThemeSettings({ paletteStyle: ps.style })}
+                    activeOpacity={0.7}
                   >
-                    {ps.label}
-                  </Text>
-                  <MaterialCommunityIcons
-                    name={isSelected ? 'radiobox-marked' : 'radiobox-blank'}
-                    size={22}
-                    color={isSelected ? colors.primary : colors.outline}
-                  />
-                </TouchableOpacity>
-              </React.Fragment>
-            );
-          })}
+                    <View style={styles.paletteInfoCol}>
+                      <Text
+                        style={[
+                          styles.paletteLabel,
+                          {
+                            color: isSelected ? colors.primary : colors.onSurface,
+                            ...typography.bodyLarge,
+                            fontWeight: isSelected ? '700' : '500',
+                            fontFamily,
+                          },
+                        ]}
+                      >
+                        {ps.label}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.paletteDesc,
+                          {
+                            color: colors.onSurfaceVariant,
+                            ...typography.bodySmall,
+                            fontFamily,
+                          },
+                        ]}
+                      >
+                        {ps.description}
+                      </Text>
+                      {/* Live Palette Swatches */}
+                      <View style={styles.swatchesRow}>
+                        <View style={[styles.swatchPill, { backgroundColor: preview.primary }]} />
+                        <View style={[styles.swatchPill, { backgroundColor: preview.secondary }]} />
+                        <View style={[styles.swatchPill, { backgroundColor: preview.tertiary }]} />
+                        <View style={[styles.swatchPill, { backgroundColor: preview.container }]} />
+                      </View>
+                    </View>
+
+                    <MaterialCommunityIcons
+                      name={isSelected ? 'radiobox-marked' : 'radiobox-blank'}
+                      size={22}
+                      color={isSelected ? colors.primary : colors.outline}
+                    />
+                  </TouchableOpacity>
+                </React.Fragment>
+              );
+            });
+          })()}
         </View>
 
         {/* Font Family */}
-        <Text style={[styles.sectionTitle, { color: colors.primary, fontFamily }]}>
+        <Text style={[styles.sectionTitle, { color: colors.primary, ...typography.titleSmall, fontFamily }]}>
           Font Family
         </Text>
         <View
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
+              borderRadius: shapes.large,
+              elevation: elevation.level1,
             },
           ]}
         >
@@ -260,6 +359,7 @@ export const LookAndFeelScreen: React.FC = () => {
                       styles.radioLabel,
                       {
                         color: isSelected ? colors.primary : colors.onSurface,
+                        ...typography.bodyLarge,
                         fontWeight: isSelected ? '700' : '500',
                         fontFamily,
                       },
@@ -283,7 +383,7 @@ export const LookAndFeelScreen: React.FC = () => {
         visible={showColorPicker}
         initialColor={themeSettings.seedColor}
         onConfirm={(c) => {
-          setThemeSettings({ seedColor: c });
+          setThemeSettings({ seedColor: c, useMaterialYou: false });
           setShowColorPicker(false);
         }}
         onCancel={() => setShowColorPicker(false)}
@@ -321,7 +421,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 16,
-    borderWidth: 1,
     alignItems: 'center',
     gap: 6,
   },
@@ -330,7 +429,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 22,
-    borderWidth: 1,
+    elevation: 1,
     overflow: 'hidden',
     marginBottom: 8,
   },
@@ -338,6 +437,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+  },
+  settingRowInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  monetActiveContainer: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(150, 150, 150, 0.15)',
+    gap: 10,
+  },
+  monetBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  monetBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  monetChipsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  monetChip: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    elevation: 2,
   },
   rowLabelCol: {
     flex: 1,
@@ -382,6 +511,35 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     fontSize: 15,
+  },
+  paletteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  paletteInfoCol: {
+    flex: 1,
+    marginRight: 16,
+  },
+  paletteLabel: {
+    fontSize: 15,
+  },
+  paletteDesc: {
+    fontSize: 12,
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  swatchesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  swatchPill: {
+    width: 22,
+    height: 12,
+    borderRadius: 6,
   },
   divider: {
     height: 1,

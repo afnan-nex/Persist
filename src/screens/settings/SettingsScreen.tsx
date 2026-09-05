@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppHeader } from '../../components/common/AppHeader';
+import { TopAppBar, M3Switch } from '../../components/m3';
 import { isBiometricsAvailable, authenticateUser } from '../../services/biometrics';
 
 export const SettingsScreen: React.FC = () => {
@@ -40,7 +40,7 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader title="Settings" />
+      <TopAppBar title="Settings" />
 
       <ScrollView
         style={styles.scrollArea}
@@ -55,8 +55,7 @@ export const SettingsScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
             },
           ]}
         >
@@ -88,14 +87,13 @@ export const SettingsScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
             },
           ]}
         >
           {/* Start of Week */}
           <View style={styles.settingRow}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="calendar-start" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -107,7 +105,7 @@ export const SettingsScreen: React.FC = () => {
               </Text>
             </View>
             <TouchableOpacity
-              style={[styles.togglePill, { backgroundColor: colors.surfaceVariant }]}
+              style={[styles.togglePill, { backgroundColor: colors.surfaceContainerHigh }]}
               onPress={() =>
                 setAppSettings({
                   startOfWeek: appSettings.startOfWeek === 'MONDAY' ? 'SUNDAY' : 'MONDAY',
@@ -124,7 +122,7 @@ export const SettingsScreen: React.FC = () => {
 
           {/* Starting Tab */}
           <View style={styles.settingRow}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="view-dashboard-outline" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -136,7 +134,7 @@ export const SettingsScreen: React.FC = () => {
               </Text>
             </View>
             <TouchableOpacity
-              style={[styles.togglePill, { backgroundColor: colors.surfaceVariant }]}
+              style={[styles.togglePill, { backgroundColor: colors.surfaceContainerHigh }]}
               onPress={() =>
                 setAppSettings({
                   startingPage: appSettings.startingPage === 'tasks' ? 'habits' : 'tasks',
@@ -153,7 +151,7 @@ export const SettingsScreen: React.FC = () => {
 
           {/* 24-Hour Time */}
           <View style={styles.settingRow}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="clock-outline" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -164,11 +162,9 @@ export const SettingsScreen: React.FC = () => {
                 Use 24-hour time format
               </Text>
             </View>
-            <Switch
+            <M3Switch
               value={appSettings.is24Hr}
               onValueChange={(val) => setAppSettings({ is24Hr: val })}
-              trackColor={{ false: colors.outline, true: colors.primary }}
-              thumbColor={colors.surface}
             />
           </View>
 
@@ -176,7 +172,7 @@ export const SettingsScreen: React.FC = () => {
 
           {/* Notifications Toggle */}
           <View style={styles.settingRow}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="bell-outline" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -187,11 +183,9 @@ export const SettingsScreen: React.FC = () => {
                 Receive alarms and habit reminders
               </Text>
             </View>
-            <Switch
+            <M3Switch
               value={appSettings.notificationsEnabled}
               onValueChange={(val) => setAppSettings({ notificationsEnabled: val })}
-              trackColor={{ false: colors.outline, true: colors.primary }}
-              thumbColor={colors.surface}
             />
           </View>
 
@@ -199,7 +193,7 @@ export const SettingsScreen: React.FC = () => {
 
           {/* Biometric Lock */}
           <View style={styles.settingRow}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="fingerprint" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -210,11 +204,9 @@ export const SettingsScreen: React.FC = () => {
                 Protect app with fingerprint / PIN
               </Text>
             </View>
-            <Switch
+            <M3Switch
               value={appSettings.biometricLock}
               onValueChange={handleToggleBiometrics}
-              trackColor={{ false: colors.outline, true: colors.primary }}
-              thumbColor={colors.surface}
             />
           </View>
         </View>
@@ -227,8 +219,7 @@ export const SettingsScreen: React.FC = () => {
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
+              backgroundColor: colors.surfaceContainerLow,
             },
           ]}
         >
@@ -237,7 +228,7 @@ export const SettingsScreen: React.FC = () => {
             onPress={() => navigation.navigate('Backup')}
             activeOpacity={0.7}
           >
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="cloud-upload-outline" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -251,26 +242,6 @@ export const SettingsScreen: React.FC = () => {
             <MaterialCommunityIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
 
-          <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
-
-          <TouchableOpacity
-            style={styles.navRow}
-            onPress={() => navigation.navigate('Support')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
-              <MaterialCommunityIcons name="heart-outline" size={20} color="#F43F5E" />
-            </View>
-            <View style={styles.rowLabelCol}>
-              <Text style={[styles.rowTitle, { color: colors.onSurface, fontFamily }]}>
-                Support & Contribute
-              </Text>
-              <Text style={[styles.rowSubtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
-                Free and open-source project
-              </Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
-          </TouchableOpacity>
 
           <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
 
@@ -279,7 +250,7 @@ export const SettingsScreen: React.FC = () => {
             onPress={() => navigation.navigate('About')}
             activeOpacity={0.7}
           >
-            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceVariant }]}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.surfaceContainerHigh }]}>
               <MaterialCommunityIcons name="information-outline" size={20} color={colors.onSurface} />
             </View>
             <View style={styles.rowLabelCol}>
@@ -287,7 +258,7 @@ export const SettingsScreen: React.FC = () => {
                 About Persist
               </Text>
               <Text style={[styles.rowSubtitle, { color: colors.onSurfaceVariant, fontFamily }]}>
-                v1.0.0 • Open source
+                v1.0.1 • Open source
               </Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
@@ -320,7 +291,11 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 22,
-    borderWidth: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     overflow: 'hidden',
     marginBottom: 8,
   },
